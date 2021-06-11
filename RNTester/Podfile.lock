@@ -518,7 +518,7 @@ SPEC CHECKSUMS:
   React-CoreModules: 0b712a87a64c92c7d57768205571b65890bf4f1f
   React-cxxreact: 7c93e59c19512130046b175c40939178b86d9308
   React-jsi: 0ee08b248b68c950a84df740c8bd4835e5f863ff
-  React-jsiexecutor: 34d44a917be4583dc04d0715fbb73d988761a68b
+  React-jsiexecutor: a580714f2145e6ac5ac8e4bab2860cedf7f66259
   React-jsinspector: d4bbf569451953b6dd7d4672aff697ae52fae510
   React-RCTActionSheet: d0af02a1b84e1df8983c498eebce57ef17848ecf
   React-RCTAnimation: cd443d8ddb0e404791a8bd05e34847ef3d600855
