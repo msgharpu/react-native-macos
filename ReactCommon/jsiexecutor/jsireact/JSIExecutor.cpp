@@ -6,7 +6,6 @@
  */
 
 #include "jsireact/JSIExecutor.h"
-#include "JSIRuntimeInitializeStateNotifier-C-Interface.h"
 
 #include <cxxreact/JSBigString.h>
 #include <cxxreact/ModuleRegistry.h>
@@ -142,10 +141,6 @@ void JSIExecutor::loadApplicationScript(
   if (runtimeInstaller_) {
     runtimeInstaller_(*runtime_);
   }
-
-  // TODO(OSS Candidate ISS#2710739)- send a notification that the global variables are set so we can then proceed with bundle loading (which depends on these and will crash if that thread finishes before they are set)
-  NotifyRuntimeInitializationEnd();
-
   bool hasLogger(ReactMarker::logTaggedMarker);
   std::string scriptName = simpleBasename(sourceURL);
   if (hasLogger) {
