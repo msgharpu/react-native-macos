@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -23,6 +23,7 @@ module.exports = {
     '<rootDir>/template',
     'Libraries/Renderer',
     'packages/rn-tester/e2e',
+    'android-patches',
   ],
   transformIgnorePatterns: ['node_modules/(?!@react-native/)'],
   haste: {
@@ -48,5 +49,7 @@ module.exports = {
     '/__tests__/',
     '/vendor/',
     '<rootDir>/Libraries/react-native/',
+    'android-patches',
   ],
+  modulePathIgnorePatterns: ['android-patches'],
 };

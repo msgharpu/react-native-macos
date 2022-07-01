@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -164,6 +164,29 @@ exports.examples = [
               <Button
                 onPress={() => onButtonPress('submitted')}
                 testID="accessibilityLabel_button"
+                color={theme.LinkColor}
+                title="Submit Application"
+                accessibilityLabel="Press to submit your application!"
+              />
+            );
+          }}
+        </RNTesterThemeContext.Consumer>
+      );
+    },
+  },
+  {
+    title: 'Button with accessibilityState={{disabled: true}}',
+    description: ('Note: This prop will announce on TalkBack that the button is disabled. ' +
+      'The "disabled" prop has higher precedence on the state of the component': string),
+    render: function(): React.Node {
+      return (
+        <RNTesterThemeContext.Consumer>
+          {theme => {
+            return (
+              <Button
+                accessibilityState={{disabled: true}}
+                onPress={() => onButtonPress('submitted')}
+                testID="accessibilityState_button"
                 color={theme.LinkColor}
                 title="Submit Application"
                 accessibilityLabel="Press to submit your application!"

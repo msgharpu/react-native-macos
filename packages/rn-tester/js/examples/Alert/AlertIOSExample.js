@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,7 +21,7 @@ const {
 
 const {examples: SharedAlertExamples} = require('./AlertExample');
 
-import type {RNTesterExampleModuleItem} from '../../types/RNTesterTypes';
+import type {RNTesterModuleExample} from '../../types/RNTesterTypes';
 
 type Props = $ReadOnly<{||}>;
 type State = {|promptValue: ?string|};
@@ -29,10 +29,12 @@ type State = {|promptValue: ?string|};
 class PromptOptions extends React.Component<Props, State> {
   customButtons: Array<Object>;
 
-  constructor(props) {
+  constructor(props: void | Props) {
     super(props);
 
-    // $FlowFixMe this seems to be a Flow bug, `saveResponse` is defined below
+    /* $FlowFixMe[cannot-write] this seems to be a Flow bug, `saveResponse` is
+     * defined below */
+    // $FlowFixMe[method-unbinding] added when improving typing for this parameters
     this.saveResponse = this.saveResponse.bind(this);
 
     this.customButtons = [
@@ -61,7 +63,10 @@ class PromptOptions extends React.Component<Props, State> {
 
         <TouchableHighlight
           style={styles.wrapper}
-          onPress={() => Alert.prompt('Type a value', null, this.saveResponse)}>
+          // $FlowFixMe[method-unbinding] added when improving typing for this parameters
+          // $FlowFixMe[incompatible-call]
+          onPress={() => Alert.prompt('Type a value', null, this.saveResponse)}
+        >
           <View style={styles.button}>
             <Text>prompt with title & callback</Text>
           </View>
@@ -69,9 +74,8 @@ class PromptOptions extends React.Component<Props, State> {
 
         <TouchableHighlight
           style={styles.wrapper}
-          onPress={() =>
-            Alert.prompt('Type a value', null, this.customButtons)
-          }>
+          onPress={() => Alert.prompt('Type a value', null, this.customButtons)}
+        >
           <View style={styles.button}>
             <Text>prompt with title & custom buttons</Text>
           </View>
@@ -88,7 +92,8 @@ class PromptOptions extends React.Component<Props, State> {
               undefined,
               'phone-pad',
             )
-          }>
+          }
+        >
           <View style={styles.button}>
             <Text>prompt with title & custom keyboard</Text>
           </View>
@@ -100,11 +105,14 @@ class PromptOptions extends React.Component<Props, State> {
             Alert.prompt(
               'Type a value',
               null,
+              // $FlowFixMe[method-unbinding] added when improving typing for this parameters
+              // $FlowFixMe[incompatible-call]
               this.saveResponse,
               undefined,
               'Default value',
             )
-          }>
+          }
+        >
           <View style={styles.button}>
             <Text>prompt with title, callback & default value</Text>
           </View>
@@ -120,7 +128,8 @@ class PromptOptions extends React.Component<Props, State> {
               'login-password',
               'admin@site.com',
             )
-          }>
+          }
+        >
           <View style={styles.button}>
             <Text>
               prompt with title, custom buttons, login/password & default value
@@ -131,7 +140,7 @@ class PromptOptions extends React.Component<Props, State> {
     );
   }
 
-  saveResponse(promptValue) {
+  saveResponse(promptValue: any) {
     this.setState({promptValue: JSON.stringify(promptValue)});
   }
 }
@@ -172,7 +181,8 @@ exports.examples = ([
         <View>
           <TouchableHighlight
             style={styles.wrapper}
-            onPress={() => Alert.prompt('Plain Text Entry')}>
+            onPress={() => Alert.prompt('Plain Text Entry')}
+          >
             <View style={styles.button}>
               <Text>plain-text</Text>
             </View>
@@ -181,7 +191,8 @@ exports.examples = ([
             style={styles.wrapper}
             onPress={() =>
               Alert.prompt('Secure Text', null, null, 'secure-text')
-            }>
+            }
+          >
             <View style={styles.button}>
               <Text>secure-text</Text>
             </View>
@@ -190,7 +201,8 @@ exports.examples = ([
             style={styles.wrapper}
             onPress={() =>
               Alert.prompt('Login & Password', null, null, 'login-password')
-            }>
+            }
+          >
             <View style={styles.button}>
               <Text>login-password</Text>
             </View>
@@ -199,4 +211,4 @@ exports.examples = ([
       );
     },
   },
-]: RNTesterExampleModuleItem[]);
+]: Array<RNTesterModuleExample>);

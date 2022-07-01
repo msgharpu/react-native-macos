@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -56,7 +56,10 @@ class FillRateHelper {
 
   static addListener(
     callback: FillRateInfo => void,
-  ): {remove: () => void, ...} {
+  ): {
+    remove: () => void,
+    ...
+  } {
     if (_sampleRate === null) {
       console.warn('Call `FillRateHelper.setSampleRate` before `addListener`.');
     }
@@ -135,7 +138,7 @@ class FillRateHelper {
     props: {
       data: any,
       getItemCount: (data: any) => number,
-      initialNumToRender: number,
+      initialNumToRender?: ?number,
       ...
     },
     state: {

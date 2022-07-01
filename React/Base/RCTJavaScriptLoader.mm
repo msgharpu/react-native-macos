@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -62,6 +62,7 @@ static RCTSource *RCTSourceCreate(NSURL *url, NSData *data, int64_t length) NS_R
 
 @implementation RCTLoadingProgress
 
+#if DEBUG // TODO(macOS GH#774) description is a debug-only feature
 - (NSString *)description
 {
   NSMutableString *desc = [NSMutableString new];
@@ -77,6 +78,7 @@ static RCTSource *RCTSourceCreate(NSURL *url, NSData *data, int64_t length) NS_R
   [desc appendString:@"\u2026"];
   return desc;
 }
+#endif // TODO(macOS GH#774)
 
 @end
 
@@ -177,6 +179,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)init)
 
   facebook::react::ScriptTag tag = facebook::react::parseTypeFromHeader(header);
   switch (tag) {
+    case facebook::react::ScriptTag::HBCBundle:
     case facebook::react::ScriptTag::RAMBundle:
       break;
 

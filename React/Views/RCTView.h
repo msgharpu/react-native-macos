@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,7 @@
 
 #import <React/RCTBorderStyle.h>
 #import <React/RCTComponent.h>
-#import <React/RCTEventDispatcher.h> // TODO(OSS Candidate ISS#2710739)
+#import <React/RCTEventDispatcherProtocol.h> // TODO(OSS Candidate ISS#2710739)
 #import <React/RCTPointerEvents.h>
 
 #if !TARGET_OS_OSX // TODO(macOS GH#774)
@@ -18,12 +18,10 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
 
 @protocol RCTAutoInsetsProtocol;
 
-@class RCTView;
-
 @interface RCTView : RCTUIView // TODO(macOS ISS#3536887)
 
 // [TODO(OSS Candidate ISS#2710739)
-- (instancetype)initWithEventDispatcher:(RCTEventDispatcher *)eventDispatcher;
+- (instancetype)initWithEventDispatcher:(id<RCTEventDispatcherProtocol>)eventDispatcher;
 
 - (BOOL)becomeFirstResponder;
 - (BOOL)resignFirstResponder;
@@ -47,13 +45,6 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
 + (void)autoAdjustInsetsForView:(RCTUIView<RCTAutoInsetsProtocol> *)parentView // TODO(macOS ISS#3536887)
                  withScrollView:(RCTUIScrollView *)scrollView // TODO(macOS ISS#3536887) and TODO(macOS ISS#3536887)
                    updateOffset:(BOOL)updateOffset;
-
-#if !TARGET_OS_OSX // TODO(macOS GH#774)
-/**
- * Find the first view controller whose view, or any subview is the specified view.
- */
-+ (UIEdgeInsets)contentInsetsForView:(UIView *)curView;
-#endif // TODO(macOS GH#774)
 
 /**
  * Layout direction of the view.
@@ -95,13 +86,13 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
 /**
  * Border colors (actually retained).
  */
-@property (nonatomic, assign) CGColorRef borderTopColor;
-@property (nonatomic, assign) CGColorRef borderRightColor;
-@property (nonatomic, assign) CGColorRef borderBottomColor;
-@property (nonatomic, assign) CGColorRef borderLeftColor;
-@property (nonatomic, assign) CGColorRef borderStartColor;
-@property (nonatomic, assign) CGColorRef borderEndColor;
-@property (nonatomic, assign) CGColorRef borderColor;
+@property (nonatomic, strong) RCTUIColor *borderTopColor;
+@property (nonatomic, strong) RCTUIColor *borderRightColor;
+@property (nonatomic, strong) RCTUIColor *borderBottomColor;
+@property (nonatomic, strong) RCTUIColor *borderLeftColor;
+@property (nonatomic, strong) RCTUIColor *borderStartColor;
+@property (nonatomic, strong) RCTUIColor *borderEndColor;
+@property (nonatomic, strong) RCTUIColor *borderColor;
 
 /**
  * Border widths.
@@ -128,6 +119,9 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
 /**
  * macOS Properties
  */
+
+@property (nonatomic, assign) CATransform3D transform3D;
+
 @property (nonatomic, copy) RCTDirectEventBlock onDoubleClick;
 @property (nonatomic, copy) RCTDirectEventBlock onClick;
 @property (nonatomic, copy) RCTDirectEventBlock onMouseEnter;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,8 +7,6 @@
  * @flow strict-local
  * @format
  */
-
-'use strict';
 
 import Pressability, {
   type PressabilityConfig,
@@ -167,7 +165,10 @@ class TouchableHighlight extends React.Component<Props, State> {
   _createPressabilityConfig(): PressabilityConfig {
     return {
       cancelable: !this.props.rejectResponderTermination,
-      disabled: this.props.disabled,
+      disabled:
+        this.props.disabled != null
+          ? this.props.disabled
+          : this.props.accessibilityState?.disabled,
       hitSlop: this.props.hitSlop,
       delayLongPress: this.props.delayLongPress,
       delayPressIn: this.props.delayPressIn,
@@ -282,18 +283,26 @@ class TouchableHighlight extends React.Component<Props, State> {
     const {
       onBlur,
       onFocus,
-      onMouseEnter, // [TODO(macOS/win GH#774)
-      onMouseLeave, // ]TODO(macOS/win GH#774)
+      onMouseEnter, // [TODO(macOS GH#774)
+      onMouseLeave, // ]TODO(macOS GH#774)
       ...eventHandlersWithoutBlurAndFocus
     } = this.state.pressability.getEventHandlers();
+
+    const accessibilityState =
+      this.props.disabled != null
+        ? {
+            ...this.props.accessibilityState,
+            disabled: this.props.disabled,
+          }
+        : this.props.accessibilityState;
 
     return (
       <View
         accessible={this.props.accessible !== false}
         accessibilityLabel={this.props.accessibilityLabel}
-        accessibilityHint={this.props.accessibilityHint} // TODO(OSS Candidate ISS#2710739)
+        accessibilityHint={this.props.accessibilityHint}
         accessibilityRole={this.props.accessibilityRole}
-        accessibilityState={this.props.accessibilityState}
+        accessibilityState={accessibilityState}
         accessibilityValue={this.props.accessibilityValue}
         accessibilityActions={this.props.accessibilityActions}
         onAccessibilityAction={this.props.onAccessibilityAction}
@@ -301,14 +310,6 @@ class TouchableHighlight extends React.Component<Props, State> {
         accessibilityLiveRegion={this.props.accessibilityLiveRegion}
         accessibilityViewIsModal={this.props.accessibilityViewIsModal}
         accessibilityElementsHidden={this.props.accessibilityElementsHidden}
-        acceptsFirstMouse={
-          this.props.acceptsFirstMouse !== false && !this.props.disabled
-        } // TODO(macOS GH#774)
-        enableFocusRing={
-          (this.props.enableFocusRing === undefined ||
-            this.props.enableFocusRing === true) &&
-          !this.props.disabled
-        } // TODO(macOS/win GH#774)
         style={StyleSheet.compose(
           this.props.style,
           this.state.extraStyles?.underlay,
@@ -321,33 +322,31 @@ class TouchableHighlight extends React.Component<Props, State> {
         nextFocusLeft={this.props.nextFocusLeft}
         nextFocusRight={this.props.nextFocusRight}
         nextFocusUp={this.props.nextFocusUp}
-        // [macOS #656 We need to reconcile between focusable and acceptsKeyboardFocus
-        // (e.g. if one is explicitly disabled, we shouldn't implicitly enable the
-        // other on the underlying view). Prefer passing acceptsKeyboardFocus if
-        // passed explicitly to preserve original behavior, and trigger view warnings.
-        {...(this.props.acceptsKeyboardFocus !== undefined
-          ? {
-              acceptsKeyboardFocus:
-                this.props.acceptsKeyboardFocus === true &&
-                !this.props.disabled,
-            }
-          : {
-              focusable: this.props.focusable !== false && !this.props.disabled,
-            })}
-        // macOS]
-        tooltip={this.props.tooltip} // TODO(macOS/win GH#774)
-        onMouseEnter={this.props.onMouseEnter} // [TODO(macOS/win GH#774)
+        nativeID={this.props.nativeID}
+        testID={this.props.testID}
+        // [TODO(macOS GH#774)
+        acceptsFirstMouse={
+          this.props.acceptsFirstMouse !== false && !this.props.disabled
+        }
+        enableFocusRing={
+          (this.props.enableFocusRing === undefined ||
+            this.props.enableFocusRing === true) &&
+          !this.props.disabled
+        }
+        focusable={this.props.focusable !== false && !this.props.disabled}
+        tooltip={this.props.tooltip}
+        onMouseEnter={this.props.onMouseEnter}
         onMouseLeave={this.props.onMouseLeave}
         onDragEnter={this.props.onDragEnter}
         onDragLeave={this.props.onDragLeave}
         onDrop={this.props.onDrop}
         onFocus={this.props.onFocus}
         onBlur={this.props.onBlur}
-        draggedTypes={this.props.draggedTypes} // ]TODO(macOS/win GH#774)
-        nativeID={this.props.nativeID}
-        testID={this.props.testID}
+        draggedTypes={this.props.draggedTypes}
+        // ]TODO(macOS/win GH#774)
         ref={this.props.hostRef}
-        {...eventHandlersWithoutBlurAndFocus}>
+        {...eventHandlersWithoutBlurAndFocus}
+      >
         {React.cloneElement(child, {
           style: StyleSheet.compose(
             child.props.style,
@@ -378,6 +377,13 @@ class TouchableHighlight extends React.Component<Props, State> {
   }
 }
 
-module.exports = (React.forwardRef((props, hostRef) => (
+const Touchable = (React.forwardRef((props, hostRef) => (
   <TouchableHighlight {...props} hostRef={hostRef} />
-)): React.AbstractComponent<$ReadOnly<$Diff<Props, {|hostRef: mixed|}>>>);
+)): React.AbstractComponent<
+  $ReadOnly<$Diff<Props, {|hostRef: React.Ref<typeof View>|}>>,
+  React.ElementRef<typeof View>,
+>);
+
+Touchable.displayName = 'TouchableHighlight';
+
+module.exports = Touchable;

@@ -1,8 +1,6 @@
-diff --git a/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewManager.java b/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewManager.java
-index 851ec10c6..4fe93de49 100644
---- a/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewManager.java
-+++ b/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewManager.java
-@@ -25,6 +25,7 @@ import com.facebook.react.uimanager.PointerEvents;
+--- ".\\react-native-macos\\ReactAndroid\\src\\main\\java\\com\\facebook\\react\\views\\view\\ReactViewManager.java"	2022-06-03 10:43:46.680561400 -0700
++++ ".\\react-native-macos2\\ReactAndroid\\src\\main\\java\\com\\facebook\\react\\views\\view\\ReactViewManager.java"	2022-06-03 10:36:55.352465500 -0700
+@@ -26,6 +26,7 @@
  import com.facebook.react.uimanager.Spacing;
  import com.facebook.react.uimanager.ThemedReactContext;
  import com.facebook.react.uimanager.UIManagerHelper;
@@ -10,7 +8,7 @@ index 851ec10c6..4fe93de49 100644
  import com.facebook.react.uimanager.ViewProps;
  import com.facebook.react.uimanager.annotations.ReactProp;
  import com.facebook.react.uimanager.annotations.ReactPropGroup;
-@@ -48,8 +49,13 @@ public class ReactViewManager extends ReactClippingViewManager<ReactViewGroup> {
+@@ -49,8 +50,13 @@
      Spacing.START,
      Spacing.END,
    };
@@ -26,7 +24,7 @@ index 851ec10c6..4fe93de49 100644
    private static final String HOTSPOT_UPDATE_KEY = "hotspotUpdate";
  
    @ReactProp(name = "accessible")
-@@ -120,6 +126,36 @@ public class ReactViewManager extends ReactClippingViewManager<ReactViewGroup> {
+@@ -121,6 +127,36 @@
      }
    }
  
@@ -63,7 +61,7 @@ index 851ec10c6..4fe93de49 100644
    @ReactProp(name = "borderStyle")
    public void setBorderStyle(ReactViewGroup view, @Nullable String borderStyle) {
      view.setBorderStyle(borderStyle);
-@@ -287,7 +323,7 @@ public class ReactViewManager extends ReactClippingViewManager<ReactViewGroup> {
+@@ -303,7 +339,7 @@
  
    @Override
    public Map<String, Integer> getCommandsMap() {
@@ -72,7 +70,7 @@ index 851ec10c6..4fe93de49 100644
    }
  
    @Override
-@@ -303,6 +339,16 @@ public class ReactViewManager extends ReactClippingViewManager<ReactViewGroup> {
+@@ -319,6 +355,16 @@
            handleSetPressed(root, args);
            break;
          }
@@ -89,7 +87,7 @@ index 851ec10c6..4fe93de49 100644
      }
    }
  
-@@ -319,6 +365,16 @@ public class ReactViewManager extends ReactClippingViewManager<ReactViewGroup> {
+@@ -335,6 +381,16 @@
            handleSetPressed(root, args);
            break;
          }

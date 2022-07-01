@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -85,6 +85,13 @@
     _backedTextInputView.textInputDelegate = self;
     _backedTextInputView.text = previousTextField.text;
     [self replaceSubview:previousTextField with:_backedTextInputView];
+  }
+}
+
+- (void)setEnableFocusRing:(BOOL)enableFocusRing {
+  [super setEnableFocusRing:enableFocusRing];
+  if ([_backedTextInputView respondsToSelector:@selector(setEnableFocusRing:)]) {
+    [_backedTextInputView setEnableFocusRing:enableFocusRing];
   }
 }
 #endif // ]TODO(macOS GH#774)

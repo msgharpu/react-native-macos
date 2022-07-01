@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -956,8 +956,12 @@ Please follow the instructions at: fburl.com/rn-remote-assets`,
             fileName: '/path/to/filename.js',
             location: {column: 1, row: 1},
           },
-          // TODO: we're missing the second component,
-          // because stackframe-parser does not recognize it.
+          {
+            collapse: false,
+            content: 'forEach',
+            fileName: '[native code]',
+            location: {column: -1, row: -1},
+          },
           {
             collapse: false,
             content: 'MyAppComponent',
@@ -993,8 +997,12 @@ Please follow the instructions at: fburl.com/rn-remote-assets`,
             fileName: '/path/to/filename.js',
             location: {column: 1, row: 1},
           },
-          // TODO: we're missing the second component,
-          // because stackframe-parser does not recognize it.
+          {
+            collapse: false,
+            content: 'forEach',
+            fileName: '[native code]',
+            location: {column: -1, row: -1},
+          },
           {
             collapse: false,
             content: 'MyAppComponent',
@@ -1023,8 +1031,12 @@ Please follow the instructions at: fburl.com/rn-remote-assets`,
             fileName: '/path/to/filename.js',
             location: {column: 1, row: 1},
           },
-          // TODO: we're missing the second component,
-          // because stackframe-parser does not recognize it.
+          {
+            collapse: false,
+            content: 'forEach',
+            fileName: '[native code]',
+            location: {column: -1, row: -1},
+          },
           {
             collapse: false,
             content: 'MyAppComponent',
@@ -1054,8 +1066,12 @@ Please follow the instructions at: fburl.com/rn-remote-assets`,
             fileName: '/path/to/filename.js',
             location: {column: 1, row: 1},
           },
-          // TODO: we're missing the second component,
-          // because stackframe-parser does not recognize it.
+          {
+            collapse: false,
+            content: 'forEach',
+            fileName: '[native code]',
+            location: {column: -1, row: -1},
+          },
           {
             collapse: false,
             content: 'MyAppComponent',
@@ -1087,8 +1103,12 @@ Please follow the instructions at: fburl.com/rn-remote-assets`,
             fileName: '/path/to/filename.js',
             location: {column: 1, row: 1},
           },
-          // TODO: we're missing the second component,
-          // because stackframe-parser does not recognize it.
+          {
+            collapse: false,
+            content: 'forEach',
+            fileName: '[native code]',
+            location: {column: -1, row: -1},
+          },
           {
             collapse: false,
             content: 'MyAppComponent',
@@ -1151,8 +1171,12 @@ Please follow the instructions at: fburl.com/rn-remote-assets`,
             fileName: '/path/to/filename.js',
             location: {column: 1, row: 1},
           },
-          // TODO: we're missing the second component,
-          // because stackframe-parser does not recognize it.
+          {
+            collapse: false,
+            content: 'forEach',
+            fileName: '[native code]',
+            location: {column: -1, row: -1},
+          },
           {
             collapse: false,
             content: 'MyAppComponent',
@@ -1212,8 +1236,12 @@ Please follow the instructions at: fburl.com/rn-remote-assets`,
             fileName: '/path/to/filename.js',
             location: {column: 1, row: 1},
           },
-          // TODO: we're missing the second component,
-          // because stackframe-parser does not recognize it.
+          {
+            collapse: false,
+            content: 'forEach',
+            fileName: '[native code]',
+            location: {column: -1, row: -1},
+          },
           {
             collapse: false,
             content: 'MyAppComponent',

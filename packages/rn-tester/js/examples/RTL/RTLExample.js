@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -145,7 +145,10 @@ type RTLSwitcherComponentState = {|
 |};
 
 function withRTLState(Component) {
-  return class extends React.Component<*, RTLSwitcherComponentState> {
+  return class extends React.Component<
+    {style?: any},
+    RTLSwitcherComponentState,
+  > {
     constructor(...args) {
       super(...args);
       this.state = {
@@ -310,7 +313,8 @@ const PaddingExample = withRTLState(({isRTL, setRTL}) => {
           borderWidth: 1,
           borderColor: color,
           direction: isRTL ? 'rtl' : 'ltr',
-        }}>
+        }}
+      >
         <View
           style={{
             backgroundColor: 'white',
@@ -319,7 +323,8 @@ const PaddingExample = withRTLState(({isRTL, setRTL}) => {
             borderLeftWidth: 1,
             borderRightWidth: 1,
             borderColor: 'gray',
-          }}>
+          }}
+        >
           <RTLToggler setRTL={setRTL} isRTL={isRTL} />
         </View>
       </View>
@@ -342,7 +347,8 @@ const MarginExample = withRTLState(({isRTL, setRTL}) => {
           borderWidth: 1,
           borderColor: 'green',
           direction: isRTL ? 'rtl' : 'ltr',
-        }}>
+        }}
+      >
         <View
           style={{
             backgroundColor: 'white',
@@ -353,7 +359,8 @@ const MarginExample = withRTLState(({isRTL, setRTL}) => {
             borderLeftWidth: 1,
             borderRightWidth: 1,
             borderColor: 'gray',
-          }}>
+          }}
+        >
           <RTLToggler setRTL={setRTL} isRTL={isRTL} />
         </View>
       </View>
@@ -375,13 +382,15 @@ const PositionExample = withRTLState(({isRTL, setRTL}) => {
           borderWidth: 1,
           borderColor: 'orange',
           direction: isRTL ? 'rtl' : 'ltr',
-        }}>
+        }}
+      >
         <View
           style={{
             backgroundColor: 'white',
             start: 50,
             borderColor: 'gray',
-          }}>
+          }}
+        >
           <RTLToggler setRTL={setRTL} isRTL={isRTL} />
         </View>
       </View>
@@ -397,13 +406,15 @@ const PositionExample = withRTLState(({isRTL, setRTL}) => {
           borderWidth: 1,
           borderColor: 'orange',
           direction: isRTL ? 'rtl' : 'ltr',
-        }}>
+        }}
+      >
         <View
           style={{
             backgroundColor: 'white',
             end: 50,
             borderColor: 'gray',
-          }}>
+          }}
+        >
           <RTLToggler setRTL={setRTL} isRTL={isRTL} />
         </View>
       </View>
@@ -424,7 +435,8 @@ const BorderWidthExample = withRTLState(({isRTL, setRTL}) => {
           style={{
             borderStartWidth: 10,
             borderEndWidth: 50,
-          }}>
+          }}
+        >
           <View>
             <RTLToggler setRTL={setRTL} isRTL={isRTL} />
           </View>
@@ -450,7 +462,8 @@ const BorderColorExample = withRTLState(({isRTL, setRTL}) => {
             borderLeftWidth: 20,
             borderRightWidth: 20,
             padding: 10,
-          }}>
+          }}
+        >
           <View>
             <RTLToggler setRTL={setRTL} isRTL={isRTL} />
           </View>
@@ -479,7 +492,8 @@ const BorderRadiiExample = withRTLState(({isRTL, setRTL}) => {
             borderBottomStartRadius: 30,
             borderBottomEndRadius: 40,
             padding: 10,
-          }}>
+          }}
+        >
           <View>
             <RTLToggler setRTL={setRTL} isRTL={isRTL} />
           </View>
@@ -515,7 +529,8 @@ const BorderExample = withRTLState(({isRTL, setRTL}) => {
             borderBottomStartRadius: 30,
             borderBottomEndRadius: 40,
             padding: 10,
-          }}>
+          }}
+        >
           <View>
             <RTLToggler setRTL={setRTL} isRTL={isRTL} />
           </View>

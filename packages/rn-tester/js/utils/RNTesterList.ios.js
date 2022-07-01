@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,9 +10,9 @@
 
 'use strict';
 
-import type {RNTesterExample} from '../types/RNTesterTypes';
+import type {RNTesterModuleInfo} from '../types/RNTesterTypes';
 
-const ComponentExamples: Array<RNTesterExample> = [
+const Components: Array<RNTesterModuleInfo> = [
   {
     key: 'ActivityIndicatorExample',
     category: 'UI',
@@ -36,8 +36,8 @@ const ComponentExamples: Array<RNTesterExample> = [
     module: require('../examples/DatePicker/DatePickerMacOSExample'),
   }, // ]TODO(macOS GH#774)
   {
-    key: 'FlatListExample',
-    module: require('../examples/FlatList/FlatListExample'),
+    key: 'FlatListExampleIndex',
+    module: require('../examples/FlatList/FlatListExampleIndex').default,
     category: 'ListView',
     supportsTVOS: true,
   },
@@ -94,11 +94,6 @@ const ComponentExamples: Array<RNTesterExample> = [
     supportsTVOS: true,
   },
   {
-    key: 'MultiColumnExample',
-    module: require('../examples/MultiColumn/MultiColumnExample'),
-    supportsTVOS: true,
-  },
-  {
     key: 'NewAppScreenExample',
     module: require('../examples/NewAppScreen/NewAppScreenExample'),
     supportsTVOS: false,
@@ -136,18 +131,25 @@ const ComponentExamples: Array<RNTesterExample> = [
     supportsTVOS: true,
   },
   {
-    key: 'SectionListExample',
-    module: require('../examples/SectionList/SectionListExample'),
-    skipTest: {
-      // [TODO(OSS Candidate ISS#2710739)
-      ios: 'Reason: RedBox shown on failure to load an image.',
-    }, // ]TODO(OSS Candidate ISS#2710739)
+    key: 'ScrollViewIndicatorInsetsExample',
+    /* $FlowFixMe TODO(macOS GH#774): allow macOS to share iOS test */
+    module: require('../examples/ScrollView/ScrollViewIndicatorInsetsExample.ios'),
+  },
+  {
+    key: 'SectionListIndex',
+    module: require('../examples/SectionList/SectionListIndex'),
     category: 'ListView',
     supportsTVOS: true,
   },
   {
     key: 'StatusBarExample',
     module: require('../examples/StatusBar/StatusBarExample'),
+    supportsTVOS: false,
+  },
+  {
+    key: 'SwipeableCardExample',
+    module: require('../examples/SwipeableCardExample/SwipeableCardExample'),
+    category: 'UI',
     supportsTVOS: false,
   },
   {
@@ -190,9 +192,17 @@ const ComponentExamples: Array<RNTesterExample> = [
     category: 'Basic',
     supportsTVOS: true,
   },
+  /* [TODO(macOS GH#774) - NewArchitectureExample depends on Fabric, which we don't have on macOS yet
+  {
+    key: 'NewArchitectureExample',
+    category: 'UI',
+    module: require('../examples/NewArchitecture/NewArchitectureExample'),
+    supportsTVOS: false,
+  },
+  ]TODO(macOS GH#774) */
 ];
 
-const APIExamples: Array<RNTesterExample> = [
+const APIs: Array<RNTesterModuleInfo> = [
   {
     key: 'AccessibilityExample',
     module: require('../examples/Accessibility/AccessibilityExample'),
@@ -222,13 +232,13 @@ const APIExamples: Array<RNTesterExample> = [
     module: require('../examples/Alert/AlertMacOSExample'),
   }, // ]TODO(macOS GH#774)
   {
-    key: 'AnimatedExample',
-    module: require('../examples/Animated/AnimatedExample'),
+    key: 'AnimatedIndex',
+    module: require('../examples/Animated/AnimatedIndex').default,
     supportsTVOS: true,
   },
   {
     key: 'AnExApp',
-    module: require('../examples/Animated/AnimatedGratuitousApp/AnExApp'),
+    module: require('../examples/AnimatedGratuitousApp/AnExApp'),
     supportsTVOS: true,
   },
   {
@@ -254,6 +264,11 @@ const APIExamples: Array<RNTesterExample> = [
   {
     key: 'CrashExample',
     module: require('../examples/Crash/CrashExample'),
+    supportsTVOS: false,
+  },
+  {
+    key: 'ASANCrashExample',
+    module: require('../examples/ASAN/ASANCrashExample'),
     supportsTVOS: false,
   },
   {
@@ -377,13 +392,13 @@ const APIExamples: Array<RNTesterExample> = [
 
 const Modules: {...} = {};
 
-APIExamples.concat(ComponentExamples).forEach(Example => {
+APIs.concat(Components).forEach(Example => {
   Modules[Example.key] = Example.module;
 });
 
 const RNTesterList = {
-  APIExamples,
-  ComponentExamples,
+  APIs,
+  Components,
   Modules,
 };
 

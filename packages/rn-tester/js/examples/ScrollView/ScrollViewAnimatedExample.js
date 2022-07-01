@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -39,14 +39,16 @@ class ScrollViewAnimatedExample extends Component<{...}> {
   render(): React.Node {
     const interpolated = this._scrollViewPos.interpolate({
       inputRange: [0, 1],
-      /* $FlowFixMe(>=0.38.0) - Flow error detected during the deployment of
-       * v0.38.0. To see the error, remove this comment and run flow */
+      /* $FlowFixMe[speculation-ambiguous] (>=0.38.0) - Flow error detected
+       * during the deployment of v0.38.0. To see the error, remove this
+       * comment and run flow */
       outputRange: [0, 0.1],
     });
     const interpolated2 = this._scrollViewPos.interpolate({
       inputRange: [0, 1],
-      /* $FlowFixMe(>=0.38.0) - Flow error detected during the deployment of
-       * v0.38.0. To see the error, remove this comment and run flow */
+      /* $FlowFixMe[speculation-ambiguous] (>=0.38.0) - Flow error detected
+       * during the deployment of v0.38.0. To see the error, remove this
+       * comment and run flow */
       outputRange: ['0deg', '1deg'],
     });
     return (
@@ -65,7 +67,8 @@ class ScrollViewAnimatedExample extends Component<{...}> {
           onScroll={Animated.event(
             [{nativeEvent: {contentOffset: {x: this._scrollViewPos}}}],
             {useNativeDriver: true},
-          )}>
+          )}
+        >
           <TouchableOpacity onPress={this.startAnimation}>
             <View style={styles.button}>
               <Text>Scroll me horizontally</Text>

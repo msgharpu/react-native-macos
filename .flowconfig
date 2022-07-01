@@ -19,6 +19,9 @@
 ; Flow doesn't support platforms
 .*/Libraries/Utilities/LoadingView.js
 
+; Ignore everything in android-patches
+<PROJECT_ROOT>/android-patches/.*
+
 [untyped]
 .*/node_modules/@react-native-community/cli/.*/.*
 
@@ -36,6 +39,8 @@ emoji=true
 
 exact_by_default=true
 
+format.bracket_spacing=false
+
 module.file_ext=.js
 module.file_ext=.json
 module.file_ext=.ios.js
@@ -52,15 +57,13 @@ suppress_type=$FlowFixMeProps
 suppress_type=$FlowFixMeState
 suppress_type=$FlowFixMeEmpty
 
-experimental.abstract_locations=true
-
 [lints]
 sketchy-null-number=warn
 sketchy-null-mixed=warn
 sketchy-number=warn
 untyped-type-import=warn
 nonstrict-import=warn
-deprecated-type=warn
+deprecated-type=error
 unsafe-getters-setters=warn
 unnecessary-invariant=warn
 signature-verification-failure=warn
@@ -75,4 +78,4 @@ untyped-import
 untyped-type-import
 
 [version]
-^0.137.0
+^0.170.0

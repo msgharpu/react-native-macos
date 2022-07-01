@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -44,10 +44,14 @@ class RequestIdleCallbackTester extends React.Component<
   render() {
     return (
       <View>
+        {/* $FlowFixMe[method-unbinding] added when improving typing for this
+         * parameters */}
         <RNTesterButton onPress={this._run.bind(this, false)}>
           Run requestIdleCallback
         </RNTesterButton>
 
+        {/* $FlowFixMe[method-unbinding] added when improving typing for this
+         * parameters */}
         <RNTesterButton onPress={this._run.bind(this, true)}>
           Burn CPU inside of requestIdleCallback
         </RNTesterButton>
@@ -354,7 +358,8 @@ exports.examples = [
                 type="setInterval"
               />
               <RNTesterButton
-                onPress={() => this._timerTester && this._timerTester.clear()}>
+                onPress={() => this._timerTester && this._timerTester.clear()}
+              >
                 Clear interval
               </RNTesterButton>
             </View>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,15 +18,11 @@
 #import "RCTScrollView.h"
 
 @implementation RCTScrollContentView
-#if TARGET_OS_OSX // [TODO(macOS GH#774)
-{
-  BOOL _hasHorizontalScroller;
-  BOOL _hasVerticalScroller;
-}
-#endif // ]TODO(macOS GH#774)
 
 - (void)reactSetFrame:(CGRect)frame
 {
+  [super reactSetFrame:frame];
+
 #if !TARGET_OS_OSX // TODO(macOS GH#774)
   RCTScrollView *scrollView = (RCTScrollView *)self.superview.superview;
 #else // [TODO(macOS GH#774)
@@ -34,16 +30,13 @@
   RCTScrollView *scrollView = (RCTScrollView *)self.superview.superview.superview;
 #endif // ]TODO(macOS GH#774)
 
-  [super reactSetFrame:frame];
-
   if (!scrollView) {
     return;
   }
 
   RCTAssert([scrollView isKindOfClass:[RCTScrollView class]], @"Unexpected view hierarchy of RCTScrollView component.");
 
-  [scrollView updateContentOffsetIfNeeded];
-
+  [scrollView updateContentSizeIfNeeded];
 #if TARGET_OS_OSX // [TODO(macOS GH#774)
   // On macOS scroll indicators may float over the content view like they do in iOS
   // or depending on system preferences they may be outside of the content view
@@ -52,21 +45,14 @@
   // the contents will overflow causing the scroll indicators to appear unnecessarily.
   NSScrollView *platformScrollView = [scrollView scrollView];
   if ([platformScrollView scrollerStyle] == NSScrollerStyleLegacy) {
-    const BOOL nextHasHorizontalScroller = [platformScrollView hasHorizontalScroller];
-    const BOOL nextHasVerticalScroller = [platformScrollView hasVerticalScroller];
+    CGFloat horizontalScrollerHeight = [platformScrollView hasHorizontalScroller] ? NSHeight([[platformScrollView horizontalScroller] frame]) : 0;
+    CGFloat verticalScrollerWidth = [platformScrollView hasVerticalScroller] ? NSWidth([[platformScrollView verticalScroller] frame]) : 0;
 
-    if (_hasHorizontalScroller != nextHasHorizontalScroller ||
-        _hasVerticalScroller != nextHasVerticalScroller) {
-
-      _hasHorizontalScroller = nextHasHorizontalScroller;
-      _hasVerticalScroller = nextHasVerticalScroller;
-
-      RCTScrollContentLocalData *localData =
-        [[RCTScrollContentLocalData alloc]
-          initWithVerticalScroller:[platformScrollView verticalScroller]
-                horizontalScroller:[platformScrollView horizontalScroller]];
-      [[[scrollView bridge] uiManager] setLocalData:localData forView:self];
-    }
+    RCTScrollContentLocalData *localData =
+      [[RCTScrollContentLocalData alloc]
+      initWithVerticalScrollerWidth:horizontalScrollerHeight
+           horizontalScrollerHeight:verticalScrollerWidth];
+    [[[scrollView bridge] uiManager] setLocalData:localData forView:self];
   }
 #endif // ]TODO(macOS GH#774)
 }

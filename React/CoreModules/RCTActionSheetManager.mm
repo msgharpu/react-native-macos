@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -43,7 +43,11 @@ NSSharingServicePickerDelegate
 
 RCT_EXPORT_MODULE()
 
+#if TARGET_OS_OSX // [TODO(macOS GH#774)
 @synthesize bridge = _bridge;
+#else // TODO(macOS GH#774)
+@synthesize viewRegistry_DEPRECATED = _viewRegistry_DEPRECATED;
+#endif // ]TODO(macOS GH#774)
 
 - (dispatch_queue_t)methodQueue
 {
@@ -59,7 +63,7 @@ RCT_EXPORT_MODULE()
   UIView *sourceView = parentViewController.view;
 
   if (anchorViewTag) {
-    sourceView = [self.bridge.uiManager viewForReactTag:anchorViewTag];
+    sourceView = [self.viewRegistry_DEPRECATED viewForReactTag:anchorViewTag];
   } else {
     alertController.popoverPresentationController.permittedArrowDirections = 0;
   }
@@ -91,9 +95,15 @@ RCT_EXPORT_METHOD(showActionSheetWithOptions
   NSArray<NSString *> *buttons = RCTConvertOptionalVecToArray(options.options(), ^id(NSString *element) {
     return element;
   });
+  NSArray<NSNumber *> *disabledButtonIndices;
   NSInteger cancelButtonIndex =
       options.cancelButtonIndex() ? [RCTConvert NSInteger:@(*options.cancelButtonIndex())] : -1;
   NSArray<NSNumber *> *destructiveButtonIndices;
+  if (options.disabledButtonIndices()) {
+    disabledButtonIndices = RCTConvertVecToArray(*options.disabledButtonIndices(), ^id(double element) {
+      return @(element);
+    });
+  }
   if (options.destructiveButtonIndices()) {
     destructiveButtonIndices = RCTConvertVecToArray(*options.destructiveButtonIndices(), ^id(double element) {
       return @(element);
@@ -110,17 +120,22 @@ RCT_EXPORT_METHOD(showActionSheetWithOptions
 #if !TARGET_OS_OSX // TODO(macOS GH#774)
   UIViewController *controller = RCTPresentedViewController();
   UIColor *tintColor = [RCTConvert UIColor:options.tintColor() ? @(*options.tintColor()) : nil];
+  UIColor *cancelButtonTintColor =
+      [RCTConvert UIColor:options.cancelButtonTintColor() ? @(*options.cancelButtonTintColor()) : nil];
 
   if (controller == nil) {
-    RCTLogError(@"Tried to display action sheet but there is no application window. options: %@", @{ /*  // [ TODO(macOS GH#774): nil check our dict values before inserting them or we may crash */
-      @"title" : title ?: [NSNull null],
-      @"message" : message ?: [NSNull null],
-      @"options" : buttons ?: [NSNull null],
-      @"cancelButtonIndex" : @(cancelButtonIndex),
-      @"destructiveButtonIndices" : destructiveButtonIndices ?: [NSNull null],
-      @"anchor" : anchor ?: [NSNull null],
-      @"tintColor" : tintColor ?: [NSNull null],
-    }); /*  // TODO(macOS GH#774): nil check our dict values before inserting them or we may crash ] */
+    RCTLogError(
+        @"Tried to display action sheet but there is no application window. options: %@", @{ /*  // [ TODO(macOS GH#774): nil check our dict values before inserting them or we may crash */
+          @"title" : title ?: [NSNull null],
+          @"message" : message ?: [NSNull null],
+          @"options" : buttons ?: [NSNull null],
+          @"cancelButtonIndex" : @(cancelButtonIndex),
+          @"destructiveButtonIndices" : destructiveButtonIndices ?: [NSNull null],
+          @"anchor" : anchor ?: [NSNull null],
+          @"tintColor" : tintColor ?: [NSNull null],
+          @"cancelButtonTintColor" : cancelButtonTintColor ?: [NSNull null],
+          @"disabledButtonIndices" : disabledButtonIndices ?: [NSNull null],
+        }); /*  // TODO(macOS GH#774): nil check our dict values before inserting them or we may crash ] */
     return;
   }
 #endif // TODO(macOS GH#774)
@@ -137,22 +152,42 @@ RCT_EXPORT_METHOD(showActionSheetWithOptions
                                                                     preferredStyle:UIAlertControllerStyleActionSheet];
 
   NSInteger index = 0;
+  bool isCancelButtonIndex = false;
   for (NSString *option in buttons) {
     UIAlertActionStyle style = UIAlertActionStyleDefault;
     if ([destructiveButtonIndices containsObject:@(index)]) {
       style = UIAlertActionStyleDestructive;
     } else if (index == cancelButtonIndex) {
       style = UIAlertActionStyleCancel;
+      isCancelButtonIndex = true;
     }
 
     NSInteger localIndex = index;
-    [alertController addAction:[UIAlertAction actionWithTitle:option
-                                                        style:style
-                                                      handler:^(__unused UIAlertAction *action) {
-                                                        callback(@[ @(localIndex) ]);
-                                                      }]];
+    UIAlertAction *actionButton = [UIAlertAction actionWithTitle:option
+                                                           style:style
+                                                         handler:^(__unused UIAlertAction *action) {
+                                                           callback(@[ @(localIndex) ]);
+                                                         }];
+    if (isCancelButtonIndex) {
+      [actionButton setValue:cancelButtonTintColor forKey:@"titleTextColor"];
+    }
+    [alertController addAction:actionButton];
 
     index++;
+  }
+
+  if (disabledButtonIndices) {
+    for (NSNumber *disabledButtonIndex in disabledButtonIndices) {
+      if ([disabledButtonIndex integerValue] < buttons.count) {
+        [alertController.actions[[disabledButtonIndex integerValue]] setEnabled:false];
+      } else {
+        RCTLogError(
+            @"Index %@ from `disabledButtonIndices` is out of bounds. Maximum index value is %@.",
+            @([disabledButtonIndex integerValue]),
+            @(buttons.count - 1));
+        return;
+      }
+    }
   }
 
   alertController.view.tintColor = tintColor;

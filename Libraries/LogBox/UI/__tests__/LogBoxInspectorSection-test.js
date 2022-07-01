@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,8 +8,6 @@
  * @emails oncall+react_native
  * @flow strict-local
  */
-
-'use strict';
 
 const React = require('react');
 import Text from '../../../Text/Text';
@@ -31,7 +29,8 @@ describe('LogBoxInspectorSection', () => {
     const output = render.shallowRender(
       <LogBoxInspectorSection
         heading="Test Section"
-        action={<Text>Right</Text>}>
+        action={<Text>Right</Text>}
+      >
         <Text>Child</Text>
       </LogBoxInspectorSection>,
     );

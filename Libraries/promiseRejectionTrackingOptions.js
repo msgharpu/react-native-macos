@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,8 +7,6 @@
  * @format
  * @flow strict
  */
-
-'use strict';
 
 import typeof {enable} from 'promise/setimmediate/rejection-tracking';
 
@@ -20,8 +18,10 @@ let rejectionTrackingOptions: $Call<ExtractOptionsType, enable> = {
     let message: string;
     let stack: ?string;
 
+    // $FlowFixMe[method-unbinding] added when improving typing for this parameters
     const stringValue = Object.prototype.toString.call(rejection);
     if (stringValue === '[object Error]') {
+      // $FlowFixMe[method-unbinding] added when improving typing for this parameters
       message = Error.prototype.toString.call(rejection);
       const error: Error = (rejection: $FlowFixMe);
       stack = error.stack;

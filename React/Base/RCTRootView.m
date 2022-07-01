@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -58,9 +58,10 @@ NSString *const RCTContentDidAppearNotification = @"RCTContentDidAppearNotificat
 #endif // ]TODO(macOS GH#774)
 }
 
-- (instancetype)initWithBridge:(RCTBridge *)bridge
-                    moduleName:(NSString *)moduleName
-             initialProperties:(NSDictionary *)initialProperties
+- (instancetype)initWithFrame:(CGRect)frame
+                       bridge:(RCTBridge *)bridge
+                   moduleName:(NSString *)moduleName
+            initialProperties:(NSDictionary *)initialProperties
 {
   RCTAssertMainQueue();
   RCTAssert(bridge, @"A bridge instance is required to create an RCTRootView");
@@ -71,7 +72,7 @@ NSString *const RCTContentDidAppearNotification = @"RCTContentDidAppearNotificat
     [bridge.performanceLogger markStartForTag:RCTPLTTI];
   }
 
-  if (self = [super initWithFrame:CGRectZero]) {
+  if (self = [super initWithFrame:frame]) {
     /* [TODO(OSS Candidate ISS#2710739): don't set the background color on mac or ios so that the view is invisible during initial render
     self.backgroundColor = [UIColor whiteColor];
     ]TODO(OSS Candidate ISS#2710739) */
@@ -115,6 +116,13 @@ NSString *const RCTContentDidAppearNotification = @"RCTContentDidAppearNotificat
   return self;
 }
 
+- (instancetype)initWithBridge:(RCTBridge *)bridge
+                    moduleName:(NSString *)moduleName
+             initialProperties:(NSDictionary *)initialProperties
+{
+  return [self initWithFrame:CGRectZero bridge:bridge moduleName:moduleName initialProperties:initialProperties];
+}
+
 - (instancetype)initWithBundleURL:(NSURL *)bundleURL
                        moduleName:(NSString *)moduleName
                 initialProperties:(NSDictionary *)initialProperties
@@ -127,6 +135,21 @@ NSString *const RCTContentDidAppearNotification = @"RCTContentDidAppearNotificat
 
 RCT_NOT_IMPLEMENTED(-(instancetype)initWithFrame : (CGRect)frame)
 RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder *)aDecoder)
+
+- (BOOL)hasBridge
+{
+  return _bridge != nil;
+}
+
+- (RCTModuleRegistry *)moduleRegistry
+{
+  return _bridge.moduleRegistry;
+}
+
+- (id<RCTEventDispatcherProtocol>)eventDispatcher
+{
+  return [self.moduleRegistry moduleForName:"EventDispatcher"];
+}
 
 #pragma mark - passThroughTouches
 

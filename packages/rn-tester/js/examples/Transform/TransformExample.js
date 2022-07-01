@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,8 +7,6 @@
  * @format
  * @flow
  */
-
-'use strict';
 
 import React, {useEffect, useState} from 'react';
 import {Animated, StyleSheet, Text, View} from 'react-native';
@@ -40,15 +38,16 @@ function AnimateTansformSingleProp() {
               {
                 rotate: theta.interpolate({
                   inputRange: [0, 100],
-                  /* $FlowFixMe(>=0.38.0) - Flow error detected during the
-                   * deployment of v0.38.0. To see the error, remove this
-                   * comment and run flow */
+                  /* $FlowFixMe[speculation-ambiguous] (>=0.38.0) - Flow error
+                   * detected during the deployment of v0.38.0. To see the
+                   * error, remove this comment and run flow */
                   outputRange: ['0deg', '360deg'],
                 }),
               },
             ],
           },
-        ]}>
+        ]}
+      >
         <Text style={styles.flipText}>This text is flipping great.</Text>
       </Animated.View>
     </View>
@@ -81,15 +80,16 @@ function Flip() {
               {
                 rotateX: theta.interpolate({
                   inputRange: [0, 180],
-                  /* $FlowFixMe(>=0.38.0) - Flow error detected during the
-                   * deployment of v0.38.0. To see the error, remove this
-                   * comment and run flow */
+                  /* $FlowFixMe[speculation-ambiguous] (>=0.38.0) - Flow error
+                   * detected during the deployment of v0.38.0. To see the
+                   * error, remove this comment and run flow */
                   outputRange: ['0deg', '180deg'],
                 }),
               },
             ],
           },
-        ]}>
+        ]}
+      >
         <Text style={styles.flipText}>This text is flipping great.</Text>
       </Animated.View>
       <Animated.View
@@ -102,15 +102,16 @@ function Flip() {
               {
                 rotateX: theta.interpolate({
                   inputRange: [0, 180],
-                  /* $FlowFixMe(>=0.38.0) - Flow error detected during the
-                   * deployment of v0.38.0. To see the error, remove this
-                   * comment and run flow */
+                  /* $FlowFixMe[speculation-ambiguous] (>=0.38.0) - Flow error
+                   * detected during the deployment of v0.38.0. To see the
+                   * error, remove this comment and run flow */
                   outputRange: ['180deg', '360deg'],
                 }),
               },
             ],
           },
-        ]}>
+        ]}
+      >
         <Text style={styles.flipText}>On the flip side...</Text>
       </Animated.View>
     </View>

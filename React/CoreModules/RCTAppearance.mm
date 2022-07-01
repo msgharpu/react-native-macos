@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -28,6 +28,11 @@ static NSString *sColorSchemeOverride = nil;
 void RCTOverrideAppearancePreference(NSString *const colorSchemeOverride)
 {
   sColorSchemeOverride = colorSchemeOverride;
+}
+
+NSString *RCTCurrentOverrideAppearancePreference()
+{
+  return sColorSchemeOverride;
 }
 
 #if !TARGET_OS_OSX // TODO(macOS GH#774)
@@ -66,29 +71,25 @@ NSString *RCTColorSchemePreference(UITraitCollection *traitCollection)
 #else // [TODO(macOS GH#774)
 NSString *RCTColorSchemePreference(NSAppearance *appearance)
 {
-  if (@available(macOS 10.14, *)) {
-    static NSDictionary *appearances;
-    static dispatch_once_t onceToken;
+  static NSDictionary *appearances;
+  static dispatch_once_t onceToken;
 
-    dispatch_once(&onceToken, ^{
-      appearances = @{
-                      NSAppearanceNameAqua: RCTAppearanceColorSchemeLight,
-                      NSAppearanceNameDarkAqua: RCTAppearanceColorSchemeDark
-                      };
-    });
+  dispatch_once(&onceToken, ^{
+    appearances = @{
+                    NSAppearanceNameAqua: RCTAppearanceColorSchemeLight,
+                    NSAppearanceNameDarkAqua: RCTAppearanceColorSchemeDark
+                    };
+  });
 
-    if (!sAppearancePreferenceEnabled) {
-      // Return the default if the app doesn't allow different color schemes.
-      return RCTAppearanceColorSchemeLight;
-    }
-
-    appearance = appearance ?: [NSAppearance currentAppearance];
-    NSAppearanceName appearanceName = [appearance bestMatchFromAppearancesWithNames:@[NSAppearanceNameAqua, NSAppearanceNameDarkAqua]];
-    return appearances[appearanceName] ?: RCTAppearanceColorSchemeLight;
+  if (!sAppearancePreferenceEnabled) {
+    // Return the default if the app doesn't allow different color schemes.
+    return RCTAppearanceColorSchemeLight;
   }
 
-  // Default to light on older OS version - same behavior as Android.
-  return RCTAppearanceColorSchemeLight;
+  appearance = appearance ?: [NSApp effectiveAppearance];
+
+  NSAppearanceName appearanceName = [appearance bestMatchFromAppearancesWithNames:@[NSAppearanceNameAqua, NSAppearanceNameDarkAqua]];
+  return appearances[appearanceName] ?: RCTAppearanceColorSchemeLight;
 }
 #endif // ]TODO(macOS GH#774)
 
@@ -116,7 +117,7 @@ RCT_EXPORT_MODULE(Appearance)
   return std::make_shared<NativeAppearanceSpecJSI>(params);
 }
 
-#if TARGET_OS_OSX // [TODO(macOS GH#774): on macOS don't lazy init _currentColorScheme because [NSAppearance currentAppearance] cannot be executed on background thread.
+#if TARGET_OS_OSX // [TODO(macOS GH#774): on macOS don't lazy init _currentColorScheme because [NSApp effectiveAppearance] cannot be executed on background thread.
 - (instancetype)init
 {
   if (self = [super init]) {
@@ -129,7 +130,9 @@ RCT_EXPORT_MODULE(Appearance)
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSString *, getColorScheme)
 {
 #if !TARGET_OS_OSX // [TODO(macOS GH#774)
-  _currentColorScheme = RCTColorSchemePreference(nil);
+  if (_currentColorScheme == nil) {
+    _currentColorScheme = RCTColorSchemePreference(nil);
+  }
 #endif // ]TODO(macOS GH#774)
   return _currentColorScheme;
 }
@@ -165,7 +168,7 @@ RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSString *, getColorScheme)
 
 - (void)startObserving
 {
-  if (@available(macOS 10.14, iOS 13.0, *)) { // TODO(macOS GH#774)
+  if (@available(iOS 13.0, *)) {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(appearanceChanged:)
                                                  name:RCTUserInterfaceStyleDidChangeNotification
@@ -175,7 +178,7 @@ RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSString *, getColorScheme)
 
 - (void)stopObserving
 {
-  if (@available(macOS 10.14, iOS 13.0, *)) { // TODO(macOS GH#774)
+  if (@available(iOS 13.0, *)) {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -211,6 +211,18 @@
 - (UIFont *)font
 {
   return ((RCTUITextFieldCell*)self.cell).font;
+}
+
+- (void)setEnableFocusRing:(BOOL)enableFocusRing {
+  if (_enableFocusRing != enableFocusRing) {
+    _enableFocusRing = enableFocusRing;
+  }
+
+  if (enableFocusRing) {
+    [self setFocusRingType:NSFocusRingTypeDefault];
+  } else {
+    [self setFocusRingType:NSFocusRingTypeNone];
+  }
 }
 
 #endif // ]TODO(macOS GH#774)

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,33 +8,34 @@
  * @flow
  */
 
-'use strict';
-
 import * as React from 'react';
 import {Appearance, Text, useColorScheme, View} from 'react-native';
 import type {AppearancePreferences} from 'react-native/Libraries/Utilities/NativeAppearance';
+import type {EventSubscription} from 'react-native/Libraries/vendor/emitter/EventEmitter';
 import {RNTesterThemeContext, themes} from '../../components/RNTesterTheme';
 
 class ColorSchemeSubscription extends React.Component<
   {...},
   {colorScheme: ?string, ...},
 > {
+  _subscription: ?EventSubscription;
+
   state = {
     colorScheme: Appearance.getColorScheme(),
   };
 
   componentDidMount() {
-    Appearance.addChangeListener(this._handleAppearanceChange);
+    this._subscription = Appearance.addChangeListener(
+      (preferences: AppearancePreferences) => {
+        const {colorScheme} = preferences;
+        this.setState({colorScheme});
+      },
+    );
   }
 
   componentWillUnmount() {
-    Appearance.removeChangeListener(this._handleAppearanceChange);
+    this._subscription?.remove();
   }
-
-  _handleAppearanceChange = (preferences: AppearancePreferences) => {
-    const {colorScheme} = preferences;
-    this.setState({colorScheme});
-  };
 
   render() {
     return (
@@ -60,7 +61,8 @@ const ThemedContainer = props => (
             paddingHorizontal: 8,
             paddingVertical: 16,
             backgroundColor: theme.SystemBackgroundColor,
-          }}>
+          }}
+        >
           {props.children}
         </View>
       );
@@ -88,7 +90,8 @@ exports.examples = [
         const colorScheme = useColorScheme();
         return (
           <RNTesterThemeContext.Provider
-            value={colorScheme === 'dark' ? themes.dark : themes.light}>
+            value={colorScheme === 'dark' ? themes.dark : themes.light}
+          >
             <ThemedContainer>
               <ThemedText>useColorScheme(): {colorScheme}</ThemedText>
             </ThemedContainer>
@@ -162,7 +165,8 @@ exports.examples = [
                 style={{
                   marginVertical: 20,
                   backgroundColor: theme.SystemBackgroundColor,
-                }}>
+                }}
+              >
                 <Text style={{fontWeight: '700', color: theme.LabelColor}}>
                   {props.themeName}
                 </Text>
@@ -184,7 +188,8 @@ exports.examples = [
                           paddingVertical: 2,
                           color: theme.LabelColor,
                           fontWeight: '600',
-                        }}>
+                        }}
+                      >
                         {key}
                       </Text>
                       <Text
@@ -192,7 +197,8 @@ exports.examples = [
                           paddingHorizontal: 16,
                           paddingVertical: 2,
                           color: theme.LabelColor,
-                        }}>
+                        }}
+                      >
                         {typeof theme[key] === 'string'
                           ? theme[key]
                           : JSON.stringify(theme[key])}

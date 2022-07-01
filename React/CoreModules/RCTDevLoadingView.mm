@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,9 +16,6 @@
 #import <React/RCTDefines.h>
 #import <React/RCTDevSettings.h> // TODO(OSS Candidate ISS#2710739)
 #import <React/RCTDevLoadingViewSetEnabled.h>
-#if !TARGET_OS_OSX
-#import <React/RCTModalHostViewController.h>
-#endif // !TARGET_OS_OSX
 #import <React/RCTUtils.h>
 #import <React/RCTUIKit.h> // TODO(macOS GH#774)
 
@@ -44,9 +41,24 @@ using namespace facebook::react;
   dispatch_block_t _initialMessageBlock;
 }
 
-@synthesize bridge = _bridge;
+@synthesize bundleManager = _bundleManager;
 
 RCT_EXPORT_MODULE()
+
+- (instancetype)init
+{
+  if (self = [super init]) {
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(hide)
+                                                 name:RCTJavaScriptDidLoadNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(hide)
+                                                 name:RCTJavaScriptDidFailToLoadNotification
+                                               object:nil];
+  }
+  return self;
+}
 
 + (void)setEnabled:(BOOL)enabled
 {
@@ -55,25 +67,7 @@ RCT_EXPORT_MODULE()
 
 + (BOOL)requiresMainQueueSetup
 {
-  return YES;
-}
-
-- (void)setBridge:(RCTBridge *)bridge
-{
-  _bridge = bridge;
-
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(hide)
-                                               name:RCTJavaScriptDidLoadNotification
-                                             object:nil];
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(hide)
-                                               name:RCTJavaScriptDidFailToLoadNotification
-                                             object:nil];
-
-  if (bridge.loading) {
-    [self showWithURL:bridge.bundleURL];
-  }
+  return NO;
 }
 
 - (void)clearInitialMessageDelay
@@ -114,11 +108,12 @@ RCT_EXPORT_MODULE()
 
 - (NSString *)getTextForHost
 {
-  if (self->_bridge.bundleURL == nil || self->_bridge.bundleURL.fileURL) {
+  NSURL *bundleURL = _bundleManager.bundleURL;
+  if (bundleURL == nil || bundleURL.fileURL) {
     return @"React Native";
   }
 
-  return [NSString stringWithFormat:@"%@:%@", self->_bridge.bundleURL.host, self->_bridge.bundleURL.port];
+  return [NSString stringWithFormat:@"%@:%@", bundleURL.host, bundleURL.port];
 }
 
 - (void)showMessage:(NSString *)message color:(RCTUIColor *)color backgroundColor:(RCTUIColor *)backgroundColor // TODO(OSS Candidate ISS#2710739)
@@ -133,16 +128,11 @@ RCT_EXPORT_MODULE()
 #if !TARGET_OS_OSX // TODO(macOS GH#774)
       CGSize screenSize = [UIScreen mainScreen].bounds.size;
 
-      if (@available(iOS 11.0, *)) {
-        UIWindow *window = RCTSharedApplication().keyWindow;
-        self->_window =
-            [[UIWindow alloc] initWithFrame:CGRectMake(0, 0, screenSize.width, window.safeAreaInsets.top + 10)];
-        self->_label =
-            [[UILabel alloc] initWithFrame:CGRectMake(0, window.safeAreaInsets.top - 10, screenSize.width, 20)];
-      } else {
-        self->_window = [[UIWindow alloc] initWithFrame:CGRectMake(0, 0, screenSize.width, 20)];
-        self->_label = [[UILabel alloc] initWithFrame:self->_window.bounds];
-      }
+      UIWindow *window = RCTSharedApplication().keyWindow;
+      self->_window =
+          [[UIWindow alloc] initWithFrame:CGRectMake(0, 0, screenSize.width, window.safeAreaInsets.top + 10)];
+      self->_label =
+          [[UILabel alloc] initWithFrame:CGRectMake(0, window.safeAreaInsets.top - 10, screenSize.width, 20)];
       [self->_window addSubview:self->_label];
 
       self->_window.windowLevel = UIWindowLevelStatusBar + 1;
@@ -271,16 +261,21 @@ RCT_EXPORT_METHOD(hide)
 
 - (void)showOfflineMessage
 {
-  RCTUIColor *color = [RCTUIColor whiteColor]; // TODO(macOS GH#774)
-  RCTUIColor *backgroundColor = [RCTUIColor blackColor]; // TODO(macOS GH#774)
+  // [TODO(macOS GH#774) - isDarkModeEnabled should only be run on the main thread
+  __weak __typeof(self) weakSelf = self;
+  RCTExecuteOnMainQueue(^{
+    RCTUIColor *color = [RCTUIColor whiteColor]; // TODO(macOS GH#774)
+    RCTUIColor *backgroundColor = [RCTUIColor blackColor]; // TODO(macOS GH#774)
 
-  if ([self isDarkModeEnabled]) {
-    color = [RCTUIColor blackColor]; // TODO(macOS GH#774)
-    backgroundColor = [RCTUIColor whiteColor]; // TODO(macOS GH#774)
-  }
+    if ([weakSelf isDarkModeEnabled]) {
+      color = [RCTUIColor blackColor]; // TODO(macOS GH#774)
+      backgroundColor = [RCTUIColor whiteColor]; // TODO(macOS GH#774)
+    }
 
-  NSString *message = [NSString stringWithFormat:@"Connect to %@ to develop JavaScript.", RCT_PACKAGER_NAME];
-  [self showMessage:message color:color backgroundColor:backgroundColor];
+    NSString *message = [NSString stringWithFormat:@"Connect to %@ to develop JavaScript.", RCT_PACKAGER_NAME];
+    [weakSelf showMessage:message color:color backgroundColor:backgroundColor];
+  });
+  // ]TODO(macOS GH#774)
 }
 
 - (BOOL)isDarkModeEnabled

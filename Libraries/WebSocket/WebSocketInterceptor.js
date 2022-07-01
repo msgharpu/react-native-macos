@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,10 +7,9 @@
  * @format
  */
 
-'use strict';
-
 import NativeEventEmitter from '../EventEmitter/NativeEventEmitter';
 import NativeWebSocketModule from './NativeWebSocketModule';
+import Platform from '../Utilities/Platform';
 import base64 from 'base64-js';
 
 const originalRCTWebSocketConnect = NativeWebSocketModule.connect;
@@ -18,8 +17,8 @@ const originalRCTWebSocketSend = NativeWebSocketModule.send;
 const originalRCTWebSocketSendBinary = NativeWebSocketModule.sendBinary;
 const originalRCTWebSocketClose = NativeWebSocketModule.close;
 
-let eventEmitter: NativeEventEmitter;
-let subscriptions: Array<EventSubscription>;
+let eventEmitter;
+let subscriptions;
 
 let closeCallback;
 let sendCallback;
@@ -133,7 +132,13 @@ const WebSocketInterceptor = {
     if (isInterceptorEnabled) {
       return;
     }
-    eventEmitter = new NativeEventEmitter(NativeWebSocketModule);
+    eventEmitter = new NativeEventEmitter(
+      // T88715063: NativeEventEmitter only used this parameter on iOS. Now it uses it on all platforms, so this code was modified automatically to preserve its behavior
+      // If you want to use the native module on other platforms, please remove this condition and test its behavior
+      Platform.OS !== 'ios' && Platform.OS !== 'macos' // TODO(macOS GH#774): Also use this parameter on macOS
+        ? null
+        : NativeWebSocketModule,
+    );
     WebSocketInterceptor._registerEvents();
 
     // Override `connect` method for all RCTWebSocketModule requests

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,8 +7,6 @@
  * @flow strict-local
  * @format
  */
-
-'use strict';
 
 import * as React from 'react';
 import StyleSheet from '../../StyleSheet/StyleSheet';
@@ -28,7 +26,7 @@ type Props = $ReadOnly<{|
 const BEFORE_SLASH_RE = /^(.*)[\\/]/;
 
 // Taken from React https://github.com/facebook/react/blob/206d61f72214e8ae5b935f0bf8628491cb7f0797/packages/react-devtools-shared/src/backend/describeComponentFrame.js#L27-L41
-function getPrettyFileName(path) {
+function getPrettyFileName(path: string) {
   let fileName = path.replace(BEFORE_SLASH_RE, '');
 
   // In DEV, include code for a common special case:
@@ -82,7 +80,8 @@ function LogBoxInspectorReactFrames(props: Props): React.Node {
         <View
           // Unfortunately we don't have a unique identifier for stack traces.
           key={index}
-          style={componentStyles.frameContainer}>
+          style={componentStyles.frameContainer}
+        >
           <LogBoxButton
             backgroundColor={{
               default: 'transparent',
@@ -97,7 +96,8 @@ function LogBoxInspectorReactFrames(props: Props): React.Node {
                     openFileInEditor(frame.fileName, frame.location?.row ?? 1)
                 : null
             }
-            style={componentStyles.frame}>
+            style={componentStyles.frame}
+          >
             <View style={componentStyles.component}>
               <Text style={componentStyles.frameName}>
                 <Text style={componentStyles.bracket}>{'<'}</Text>
@@ -119,7 +119,8 @@ function LogBoxInspectorReactFrames(props: Props): React.Node {
             pressed: LogBoxStyle.getBackgroundColor(1),
           }}
           onPress={() => setCollapsed(!collapsed)}
-          style={componentStyles.collapseButton}>
+          style={componentStyles.collapseButton}
+        >
           <Text style={componentStyles.collapse}>{getCollapseMessage()}</Text>
         </LogBoxButton>
       </View>

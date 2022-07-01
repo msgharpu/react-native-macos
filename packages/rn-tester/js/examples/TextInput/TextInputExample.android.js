@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -23,7 +23,7 @@ const {
 
 const TextInputSharedExamples = require('./TextInputSharedExamples.js');
 
-import type {RNTesterExampleModuleItem} from '../../types/RNTesterTypes';
+import type {RNTesterModuleExample} from '../../types/RNTesterTypes';
 
 class ToggleDefaultPaddingExample extends React.Component<
   $FlowFixMeProps,
@@ -38,7 +38,8 @@ class ToggleDefaultPaddingExample extends React.Component<
       <View>
         <TextInput style={this.state.hasPadding ? {padding: 0} : null} />
         <Text
-          onPress={() => this.setState({hasPadding: !this.state.hasPadding})}>
+          onPress={() => this.setState({hasPadding: !this.state.hasPadding})}
+        >
           Toggle padding
         </Text>
       </View>
@@ -186,7 +187,8 @@ exports.examples = ([
             style={[
               styles.singleLine,
               {backgroundColor: 'rgba(100, 100, 100, 0.3)'},
-            ]}>
+            ]}
+          >
             <Text style={{backgroundColor: 'rgba(100, 100, 100, 0.3)'}}>
               Darker backgroundColor
             </Text>
@@ -196,6 +198,38 @@ exports.examples = ([
             selectionColor={'red'}
             style={styles.singleLine}
           />
+        </View>
+      );
+    },
+  },
+  {
+    title: 'Font Weight',
+    render: function(): React.Node {
+      return (
+        <View>
+          <TextInput
+            defaultValue="Font Weight (default)"
+            style={[styles.singleLine]}
+          />
+          {[
+            'normal',
+            'bold',
+            '900',
+            '800',
+            '700',
+            '600',
+            '500',
+            '400',
+            '300',
+            '200',
+            '100',
+          ].map(fontWeight => (
+            <TextInput
+              defaultValue={`Font Weight (${fontWeight})`}
+              key={fontWeight}
+              style={[styles.singleLine, {fontWeight}]}
+            />
+          ))}
         </View>
       );
     },
@@ -300,7 +334,8 @@ exports.examples = ([
               styles.multiline,
               {color: 'blue'},
               {textAlign: 'right', textAlignVertical: 'bottom'},
-            ]}>
+            ]}
+          >
             <Text style={styles.multiline}>
               multiline with children, aligned bottom-right
             </Text>
@@ -338,7 +373,8 @@ exports.examples = ([
             enablesReturnKeyAutomatically={true}
             returnKeyType="done"
             multiline={true}
-            style={{maxHeight: 400, minHeight: 20, backgroundColor: '#eeeeee'}}>
+            style={{maxHeight: 400, minHeight: 20, backgroundColor: '#eeeeee'}}
+          >
             generic generic generic
             <Text style={{fontSize: 6, color: 'red'}}>
               small small small small small small
@@ -424,4 +460,4 @@ exports.examples = ([
       return <ToggleDefaultPaddingExample />;
     },
   },
-]: Array<RNTesterExampleModuleItem>);
+]: Array<RNTesterModuleExample>);

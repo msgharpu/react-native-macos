@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -90,6 +90,7 @@ NSString *const RCTUIManagerWillUpdateViewsDueToContentSizeMultiplierChangeNotif
 }
 
 @synthesize bridge = _bridge;
+@synthesize moduleRegistry = _moduleRegistry;
 
 RCT_EXPORT_MODULE()
 
@@ -155,6 +156,8 @@ RCT_EXPORT_MODULE()
 
 - (void)setBridge:(RCTBridge *)bridge
 {
+  RCTEnforceNotAllowedForNewArchitecture(self, @"RCTUIManager must not be initialized for the new architecture");
+
   RCTAssert(_bridge == nil, @"Should not re-use same UIManager instance");
   _bridge = bridge;
 
@@ -175,7 +178,9 @@ RCT_EXPORT_MODULE()
   _componentDataByName = [NSMutableDictionary new];
   for (Class moduleClass in _bridge.moduleClasses) {
     if ([moduleClass isSubclassOfClass:[RCTViewManager class]]) {
-      RCTComponentData *componentData = [[RCTComponentData alloc] initWithManagerClass:moduleClass bridge:_bridge];
+      RCTComponentData *componentData = [[RCTComponentData alloc] initWithManagerClass:moduleClass
+                                                                                bridge:_bridge
+                                                                       eventDispatcher:_bridge.eventDispatcher];
       _componentDataByName[componentData.name] = componentData;
     }
   }
@@ -208,7 +213,8 @@ RCT_EXPORT_MODULE()
   id multiplier = [[self->_bridge moduleForName:@"AccessibilityManager"
                           lazilyLoadIfNecessary:YES] valueForKey:@"multiplier"];
   if (multiplier) {
-    [_bridge.eventDispatcher sendDeviceEventWithName:@"didUpdateContentSizeMultiplier" body:multiplier];
+    [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"didUpdateContentSizeMultiplier"
+                                                                          body:multiplier];
   }
 #pragma clang diagnostic pop
 
@@ -270,7 +276,8 @@ static NSDictionary *deviceOrientationEventBody(UIDeviceOrientation orientation)
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  [_bridge.eventDispatcher sendDeviceEventWithName:@"namedOrientationDidChange" body:orientationEvent];
+  [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"namedOrientationDidChange"
+                                                                        body:orientationEvent];
 #pragma clang diagnostic pop
 }
 #endif // TODO(macOS GH#774)
@@ -569,11 +576,12 @@ static NSDictionary *deviceOrientationEventBody(UIDeviceOrientation orientation)
     for (RCTShadowView *shadowView in affectedShadowViews) {
       reactTags[index] = shadowView.reactTag;
       RCTLayoutMetrics layoutMetrics = shadowView.layoutMetrics;
-      frameDataArray[index++] = (RCTFrameData){layoutMetrics.frame,
-                                               layoutMetrics.layoutDirection,
-                                               shadowView.isNewView,
-                                               shadowView.superview.isNewView,
-                                               layoutMetrics.displayType};
+      frameDataArray[index++] = (RCTFrameData){
+          layoutMetrics.frame,
+          layoutMetrics.layoutDirection,
+          shadowView.isNewView,
+          shadowView.superview.isNewView,
+          layoutMetrics.displayType};
     }
   }
 
@@ -1493,6 +1501,7 @@ RCT_EXPORT_METHOD(clearJSResponder)
 static NSMutableDictionary<NSString *, id> *moduleConstantsForComponent(
     NSMutableDictionary<NSString *, NSDictionary *> *directEvents,
     NSMutableDictionary<NSString *, NSDictionary *> *bubblingEvents,
+    NSMutableDictionary<NSString *, NSString *> *registrationCache, // TODO(macOS GH#774)
     RCTComponentData *componentData)
 {
   NSMutableDictionary<NSString *, id> *moduleConstants = [NSMutableDictionary new];
@@ -1512,6 +1521,8 @@ static NSMutableDictionary<NSString *, id> *moduleConstantsForComponent(
   moduleConstants[@"bubblingEventTypes"] = bubblingEventTypes;
   moduleConstants[@"directEventTypes"] = directEventTypes;
 
+  NSString *componentName = [componentData name]; // TODO(macOS GH#774)
+
   // Add direct events
   for (NSString *eventName in viewConfig[@"directEvents"]) {
     if (!directEvents[eventName]) {
@@ -1522,11 +1533,13 @@ static NSMutableDictionary<NSString *, id> *moduleConstantsForComponent(
     directEventTypes[eventName] = directEvents[eventName];
     if (RCT_DEBUG && bubblingEvents[eventName]) {
       RCTLogError(
-          @"Component '%@' re-registered bubbling event '%@' as a "
+          @"Component '%@' re-registered bubbling event '%@' (originally registered by '%@') as a "
            "direct event",
-          componentData.name,
-          eventName);
+          componentName,
+          eventName,
+          registrationCache[eventName] ?: @"<unknown>"); // TODO(macOS GH#774)
     }
+    registrationCache[eventName] = componentName; // TODO(macOS GH#774)
   }
 
   // Add bubbling events
@@ -1543,11 +1556,13 @@ static NSMutableDictionary<NSString *, id> *moduleConstantsForComponent(
     bubblingEventTypes[eventName] = bubblingEvents[eventName];
     if (RCT_DEBUG && directEvents[eventName]) {
       RCTLogError(
-          @"Component '%@' re-registered direct event '%@' as a "
+          @"Component '%@' re-registered direct event '%@' (originally registered by '%@') as a "
            "bubbling event",
-          componentData.name,
-          eventName);
+          componentName,
+          eventName,
+          registrationCache[eventName] ?: @"<unknown>"); // TODO(macOS GH#774)
     }
+    registrationCache[eventName] = componentName; // TODO(macOS GH#774)
   }
 
   return moduleConstants;
@@ -1563,12 +1578,13 @@ static NSMutableDictionary<NSString *, id> *moduleConstantsForComponent(
   NSMutableDictionary<NSString *, NSDictionary *> *constants = [NSMutableDictionary new];
   NSMutableDictionary<NSString *, NSDictionary *> *directEvents = [NSMutableDictionary new];
   NSMutableDictionary<NSString *, NSDictionary *> *bubblingEvents = [NSMutableDictionary new];
+  NSMutableDictionary<NSString *, NSString *> *registrationCache = [NSMutableDictionary new]; // TODO(macOS GH#774)
 
   [_componentDataByName
       enumerateKeysAndObjectsUsingBlock:^(NSString *name, RCTComponentData *componentData, __unused BOOL *stop) {
         RCTAssert(!constants[name], @"UIManager already has constants for %@", componentData.name);
         NSMutableDictionary<NSString *, id> *moduleConstants =
-            moduleConstantsForComponent(directEvents, bubblingEvents, componentData);
+            moduleConstantsForComponent(directEvents, bubblingEvents, registrationCache, componentData); // TODO(macOS GH#774)
         constants[name] = moduleConstants;
       }];
 
@@ -1609,12 +1625,15 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(lazilyLoadView : (NSString *)name)
     return @{};
   }
 
-  RCTComponentData *componentData = [[RCTComponentData alloc] initWithManagerClass:[module class] bridge:self.bridge];
+  RCTComponentData *componentData = [[RCTComponentData alloc] initWithManagerClass:[module class]
+                                                                            bridge:self.bridge
+                                                                   eventDispatcher:self.bridge.eventDispatcher];
   _componentDataByName[componentData.name] = componentData;
-  NSMutableDictionary *directEvents = [NSMutableDictionary new];
-  NSMutableDictionary *bubblingEvents = [NSMutableDictionary new];
+  NSMutableDictionary<NSString *, NSDictionary *> *directEvents = [NSMutableDictionary new];
+  NSMutableDictionary<NSString *, NSDictionary *> *bubblingEvents = [NSMutableDictionary new];
+  NSMutableDictionary<NSString *, NSString *> *registrationCache = [NSMutableDictionary new]; // TODO(macOS GH#774)
   NSMutableDictionary<NSString *, id> *moduleConstants =
-      moduleConstantsForComponent(directEvents, bubblingEvents, componentData);
+      moduleConstantsForComponent(directEvents, bubblingEvents, registrationCache, componentData); // TODO(macOS GH#774)
   return @{
     @"viewConfig" : moduleConstants,
   };

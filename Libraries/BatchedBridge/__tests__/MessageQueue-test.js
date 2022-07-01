@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -108,7 +108,7 @@ describe('MessageQueue', function() {
     const unknownModule = 'UnknownModule',
       unknownMethod = 'UnknownMethod';
     expect(() => queue.__callFunction(unknownModule, unknownMethod)).toThrow(
-      `Module ${unknownModule} is not a registered callable module (calling ${unknownMethod}). A frequent cause of the error is that the application entry file path is incorrect. 
+      `Module ${unknownModule} is not a registered callable module (calling ${unknownMethod}). A frequent cause of the error is that the application entry file path is incorrect.
       This can also happen when the JS bundle is corrupt or there is an early initialization error when loading React Native.`,
     );
   });

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -22,7 +22,7 @@ const PlatformColorAndroid = require('../PlatformColorValueTypes.android')
 
 const platformSpecific =
   OS === 'android'
-    ? unsigned => unsigned | 0 //eslint-disable-line no-bitwise
+    ? unsigned => unsigned | 0 // eslint-disable-line no-bitwise
     : x => x;
 
 describe('processColorArray', () => {
@@ -62,6 +62,30 @@ describe('processColorArray', () => {
     it('should return null if no array', () => {
       const colorFromNoArray = processColorArray(null);
       expect(colorFromNoArray).toEqual(null);
+    });
+
+    it('converts invalid colors to transparent', () => {
+      const spy = jest.spyOn(console, 'error').mockReturnValue(undefined);
+
+      const colors = ['red', '???', null, undefined, false];
+      const colorFromStringArray = processColorArray(colors);
+      const expectedIntArray = [
+        0xffff0000,
+        0x00000000,
+        0x00000000,
+        0x00000000,
+        0x00000000,
+      ].map(platformSpecific);
+      expect(colorFromStringArray).toEqual(expectedIntArray);
+
+      for (const color of colors.slice(1)) {
+        expect(spy).toHaveBeenCalledWith(
+          'Invalid value in color array:',
+          color,
+        );
+      }
+
+      spy.mockRestore();
     });
   });
 

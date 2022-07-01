@@ -1,11 +1,11 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @format
- * @flow weak
+ * @flow
  */
 
 'use strict';
@@ -102,7 +102,8 @@ class PanResponderExample extends React.Component<Props, State> {
       <RNTesterPage
         noSpacer={true}
         noScroll={true}
-        title="Basic gesture handling">
+        title="Basic gesture handling"
+      >
         <View style={styles.container}>
           <View
             ref={circle => {
@@ -111,8 +112,10 @@ class PanResponderExample extends React.Component<Props, State> {
             style={[
               styles.circle,
               {
-                translateX: this.state.left,
-                translateY: this.state.top,
+                transform: [
+                  {translateX: this.state.left},
+                  {translateY: this.state.top},
+                ],
                 backgroundColor: this.state.pressed ? 'blue' : 'green',
               },
             ]}
@@ -145,11 +148,9 @@ exports.category = 'Basic';
 exports.documentationURL = 'https://reactnative.dev/docs/panresponder';
 exports.description =
   'Shows the Use of PanResponder to provide basic gesture handling';
-exports.simpleExampleContainer = true;
 exports.examples = [
   {
     title: 'Basic gesture handling',
-    // $FlowFixMe[value-as-type]
     render: function(): React.Element<typeof PanResponderExample> {
       return <PanResponderExample />;
     },

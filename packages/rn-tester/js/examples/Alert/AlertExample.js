@@ -1,13 +1,11 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @format
  */
-
-'use strict';
 
 import React, {useState} from 'react';
 import {Alert, StyleSheet, Text, TouchableHighlight, View} from 'react-native';
@@ -34,7 +32,8 @@ const AlertWithDefaultButton = () => {
       <TouchableHighlight
         testID="alert-with-default-button"
         style={styles.wrapper}
-        onPress={() => Alert.alert('Alert', alertMessage)}>
+        onPress={() => Alert.alert('Alert', alertMessage)}
+      >
         <View style={styles.button}>
           <Text>Tap to view alert</Text>
         </View>
@@ -57,7 +56,8 @@ const AlertWithTwoButtons = () => {
             {text: 'Ignore', onPress: () => setMessage('Ignore Pressed!')},
             {text: 'Renew', onPress: () => setMessage('Renew Pressed!')},
           ])
-        }>
+        }
+      >
         <View style={styles.button}>
           <Text>Tap to view alert</Text>
         </View>
@@ -83,7 +83,8 @@ const AlertWithThreeButtons = () => {
             {text: 'No', onPress: () => setMessage('No Pressed!')},
             {text: 'Yes', onPress: () => setMessage('Yes Pressed!')},
           ])
-        }>
+        }
+      >
         <View style={styles.button}>
           <Text>Tap to view alert</Text>
         </View>
@@ -113,7 +114,8 @@ const AlertWithManyButtons = () => {
               onPress: () => setMessage(`Button ${index} Pressed!`),
             })),
           )
-        }>
+        }
+      >
         <View style={styles.button}>
           <Text>Tap to view alert</Text>
         </View>
@@ -145,7 +147,8 @@ const AlertWithCancelableTrue = () => {
                 ),
             },
           )
-        }>
+        }
+      >
         <View style={styles.button}>
           <Text>Tap to view alert</Text>
         </View>
@@ -182,7 +185,8 @@ const AlertWithStyles = () => {
               style: 'destructive',
             },
           ])
-        }>
+        }
+      >
         <View style={styles.button}>
           <Text>Tap to view alert</Text>
         </View>

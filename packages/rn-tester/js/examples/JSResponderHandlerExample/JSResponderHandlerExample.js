@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,8 +7,6 @@
  * @format
  * @flow strict-local
  */
-
-'use strict';
 
 const React = require('react');
 
@@ -51,7 +49,8 @@ exports.examples = [
         <View
           style={styles.container}
           {..._gesture.panHandlers}
-          collapsable={false}>
+          collapsable={false}
+        >
           <ScrollView style={styles.scrollview} testID="scroll_view">
             {views}
           </ScrollView>

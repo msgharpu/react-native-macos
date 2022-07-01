@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -288,19 +288,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
                           @"streetAddressLine2": UITextContentTypeStreetAddressLine2,
                           @"sublocality": UITextContentTypeSublocality,
                           @"telephoneNumber": UITextContentTypeTelephoneNumber,
+                          @"username": UITextContentTypeUsername,
+                          @"password": UITextContentTypePassword,
                           };
-
-      #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000 /* __IPHONE_11_0 */
-        if (@available(iOS 11.0, *)) {
-          NSDictionary<NSString *, NSString *> * iOS11extras = @{@"username": UITextContentTypeUsername,
-                                                                  @"password": UITextContentTypePassword};
-
-          NSMutableDictionary<NSString *, NSString *> * iOS11baseMap = [contentTypeMap mutableCopy];
-          [iOS11baseMap addEntriesFromDictionary:iOS11extras];
-
-          contentTypeMap = [iOS11baseMap copy];
-        }
-      #endif
 
       #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 120000 /* __IPHONE_12_0 */
         if (@available(iOS 12.0, *)) {
@@ -357,7 +347,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
     self.backedTextInputView.inputView = nil;
   } else {
     // Hides keyboard, but keeps blinking cursor.
-    self.backedTextInputView.inputView = [[UIView alloc] init];
+    self.backedTextInputView.inputView = [UIView new];
   }
 }
 #endif // TODO(macOS GH#774)
@@ -451,6 +441,14 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
     if (text.length > allowedLength) {
       // If we typed/pasted more than one character, limit the text inputted.
       if (text.length > 1) {
+        if (allowedLength > 0) {
+          //make sure unicode characters that are longer than 16 bits (such as emojis) are not cut off
+          NSRange cutOffCharacterRange = [text rangeOfComposedCharacterSequenceAtIndex: allowedLength - 1];
+          if (cutOffCharacterRange.location + cutOffCharacterRange.length > allowedLength) {
+            //the character at the length limit takes more than 16bits, truncation should end at the character before
+            allowedLength = cutOffCharacterRange.location;
+          }
+        }
         // Truncate the input string so the result is exactly maxLength
         NSString *limitedString = [text substringToIndex:allowedLength];
         NSMutableAttributedString *newAttributedText = [backedTextInputView.attributedText mutableCopy];
@@ -485,7 +483,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
 
   if (range.location + range.length > backedTextInputView.attributedText.string.length) {
     _predictedText = backedTextInputView.attributedText.string;
-  } else {
+  } else if (text != nil) { // TODO(macOS GH#774): -[NSString stringByReplacingCharactersInRange:withString:] doesn't like when the replacement string is nil
     _predictedText = [backedTextInputView.attributedText.string stringByReplacingCharactersInRange:range withString:text];
   }
 
@@ -560,6 +558,15 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
 #if TARGET_OS_OSX // [TODO(macOS GH#774)
 - (BOOL)textInputShouldHandleDeleteForward:(__unused id)sender {
   return YES;
+}
+
+- (void)textInputDidCancel {
+  [_eventDispatcher sendTextEventWithType:RCTTextEventTypeKeyPress
+                                 reactTag:self.reactTag
+                                     text:nil
+                                      key:@"Escape"
+                               eventCount:_nativeEventCount];
+  [self textInputDidEndEditing];
 }
 #endif // ]TODO(macOS GH#774)
 
@@ -684,7 +691,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
   _hasInputAccesoryView = shouldHaveInputAccesoryView;
 
   if (shouldHaveInputAccesoryView) {
-    UIToolbar *toolbarView = [[UIToolbar alloc] init];
+    UIToolbar *toolbarView = [UIToolbar new];
     [toolbarView sizeToFit];
     UIBarButtonItem *flexibleSpace =
       [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace

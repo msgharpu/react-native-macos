@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -71,7 +71,7 @@ const MatrixMath = {
    * This create a perspective projection towards negative z
    * Clipping the z range of [-near, -far]
    *
-   * @param fovInRadians - field of view in randians
+   * @param fovInRadians - field of view in radians
    */
   createPerspective: function(fovInRadians, aspect, near, far) {
     const h = 1 / Math.tan(fovInRadians / 2);

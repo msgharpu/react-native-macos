@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,8 +7,6 @@
  * @flow strict-local
  * @format
  */
-
-'use strict';
 
 import type {LogLevel} from '../Data/LogBoxLog';
 
@@ -60,7 +58,8 @@ function FooterButton(props: ButtonProps): React.Node {
         pressed: LogBoxStyle.getBackgroundDarkColor(),
       }}
       onPress={props.onPress}
-      style={buttonStyles.safeArea}>
+      style={buttonStyles.safeArea}
+    >
       <View style={buttonStyles.content}>
         <Text style={buttonStyles.label}>{props.text}</Text>
       </View>

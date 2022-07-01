@@ -540,9 +540,32 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     // ]TODO(macOS ISS#2323203)
   }
 
+  // [TODO(macOS GH#774)
+  // We've seen a rare ASan crash where _inputStream seems to be invalid. This is just a safety check.
+#if DEBUG
+  [self _validateStream:_outputStream name:@"_outputStream"];
+  [self _validateStream:_inputStream name:@"_inputStream"];
+#endif
+  // ]TODO(macOS GH#774)
+
   [_outputStream open];
   [_inputStream open];
 }
+
+// [TODO(macOS GH#774)
+#if DEBUG
+- (void)_validateStream:(NSStream *)stream name:(NSString *)name {
+  NSStreamStatus status = stream.streamStatus;
+  if (status != NSStreamStatusNotOpen) {
+    RCTLogWarn(@"%@ was already opened, why are we opening it again? status=%@", name, @(status));
+  }
+
+  if (stream.delegate == nil) {
+    RCTLogError(@"%@'s delegate is nil, did we clean it up too early?", name);
+  }
+}
+#endif
+// ]TODO(macOS GH#774)
 
 - (void)scheduleInRunLoop:(NSRunLoop *)aRunLoop forMode:(NSString *)mode
 {
@@ -793,6 +816,10 @@ static inline BOOL closeCodeIsValid(int closeCode)
 
 - (void)_handleFrameWithData:(NSData *)frameData opCode:(NSInteger)opcode
 {
+  // copy frameData before handling,
+  // to avoid concurrent updates to the value at the pointer
+  frameData = [frameData copy];
+
   // Check that the current data is valid UTF8
 
   BOOL isControlFrame = (opcode == RCTSROpCodePing || opcode == RCTSROpCodePong || opcode == RCTSROpCodeConnectionClose);

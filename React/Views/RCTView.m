@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,14 +7,15 @@
 
 #import "RCTView.h"
 
+#import <QuartzCore/QuartzCore.h> // TODO(macOS GH#774) - import needed on macOS to prevent compiler error on invocation of CAShapeLayer further down
+
 #import "RCTAutoInsetsProtocol.h"
 #import "RCTBorderDrawing.h"
 #import "RCTFocusChangeEvent.h" // TODO(OSS Candidate ISS#2710739)
-#import "RCTConvert.h"
 #import "RCTI18nUtil.h"
 #import "RCTLog.h"
 #import "RCTRootContentView.h" // TODO(macOS GH#774)
-#import "RCTUtils.h"
+#import "RCTViewUtils.h"
 #import "UIView+React.h"
 #import "RCTViewKeyboardEvent.h"
 #if TARGET_OS_OSX // [TODO(macOS GH#774)
@@ -123,7 +124,7 @@ static NSString *RCTRecursiveAccessibilityLabel(RCTUIView *view) // TODO(macOS I
 
 @implementation RCTView {
   RCTUIColor *_backgroundColor; // TODO(OSS Candidate ISS#2710739)
-  RCTEventDispatcher *_eventDispatcher; // TODO(OSS Candidate ISS#2710739)
+  id<RCTEventDispatcherProtocol> _eventDispatcher; // TODO(OSS Candidate ISS#2710739)
 #if TARGET_OS_OSX // [TODO(macOS GH#774)
   NSTrackingArea *_trackingArea;
   BOOL _hasMouseOver;
@@ -133,7 +134,7 @@ static NSString *RCTRecursiveAccessibilityLabel(RCTUIView *view) // TODO(macOS I
 }
 
 // [TODO(OSS Candidate ISS#2710739)
-- (instancetype)initWithEventDispatcher:(RCTEventDispatcher *)eventDispatcher
+- (instancetype)initWithEventDispatcher:(id<RCTEventDispatcherProtocol>)eventDispatcher
 {
   if ((self = [self initWithFrame:CGRectZero])) {
     _eventDispatcher = eventDispatcher;
@@ -162,6 +163,9 @@ static NSString *RCTRecursiveAccessibilityLabel(RCTUIView *view) // TODO(macOS I
     _borderBottomEndRadius = -1;
     _borderStyle = RCTBorderStyleSolid;
     _hitTestEdgeInsets = UIEdgeInsetsZero;
+#if TARGET_OS_OSX // TODO(macOS GH#774)
+    _transform3D = CATransform3DIdentity;
+#endif // TODO(macOS GH#774)
 
     _backgroundColor = super.backgroundColor;
   }
@@ -296,8 +300,8 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder : unused)
     return nil;
   }
 
-  accessibilityActionsNameMap = [[NSMutableDictionary alloc] init];
-  accessibilityActionsLabelMap = [[NSMutableDictionary alloc] init];
+  accessibilityActionsNameMap = [NSMutableDictionary new];
+  accessibilityActionsLabelMap = [NSMutableDictionary new];
   NSMutableArray *actions = [NSMutableArray array];
   for (NSDictionary *action in self.accessibilityActions) {
     if (action[@"name"]) {
@@ -341,12 +345,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder : unused)
 
     if (bundle) {
       NSURL *url = [bundle URLForResource:@"Localizable" withExtension:@"strings"];
-      if (@available(iOS 11.0, *)) {
-        rolesAndStatesDescription = [NSDictionary dictionaryWithContentsOfURL:url error:nil];
-      } else {
-        // Fallback on earlier versions
-        rolesAndStatesDescription = [NSDictionary dictionaryWithContentsOfURL:url];
-      }
+      rolesAndStatesDescription = [NSDictionary dictionaryWithContentsOfURL:url error:nil];
     }
     if (rolesAndStatesDescription == nil) {
       // Falling back to hardcoded English list.
@@ -708,17 +707,13 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder : unused)
 }
 #endif // ]TODO(macOS GH#774)
 
+#if DEBUG // TODO(macOS GH#774) description is a debug-only feature
 - (NSString *)description
 {
-  NSString *superDescription = super.description;
-  NSRange semicolonRange = [superDescription rangeOfString:@";"];
-  if (semicolonRange.location == NSNotFound) { // [TODO(macOS GH#774)
-    return [[superDescription substringToIndex:superDescription.length - 1] stringByAppendingFormat:@"; reactTag: %@; frame = %@; layer = %@>", self.reactTag, NSStringFromCGRect(self.frame), self.layer];
-  } else { // ]TODO(macOS GH#774)
-    NSString *replacement = [NSString stringWithFormat:@"; reactTag: %@;", self.reactTag];
-    return [superDescription stringByReplacingCharactersInRange:semicolonRange withString:replacement];
-  } // TODO(macOS GH#774)
+  // TODO(macOS GH#774): we shouldn't make assumptions on what super's description is. Just append additional content.
+  return [[super description] stringByAppendingFormat:@" reactTag: %@; frame = %@; layer = %@", self.reactTag, NSStringFromCGRect(self.frame), self.layer];
 }
+#endif // TODO(macOS GH#774)
 
 #if TARGET_OS_OSX // [TODO(macOS GH#774)
 - (void)viewDidMoveToWindow
@@ -793,7 +788,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder : unused)
 
 #if !TARGET_OS_OSX // TODO(macOS GH#774)
   if (parentView.automaticallyAdjustContentInsets) {
-    UIEdgeInsets autoInset = [self contentInsetsForView:parentView];
+    UIEdgeInsets autoInset = RCTContentInsets(parentView);
     baseInset.top += autoInset.top;
     baseInset.bottom += autoInset.bottom;
     baseInset.left += autoInset.left;
@@ -815,20 +810,6 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder : unused)
     }
   }
 }
-
-#if !TARGET_OS_OSX // TODO(macOS GH#774)
-+ (UIEdgeInsets)contentInsetsForView:(UIView *)view
-{
-  while (view) {
-    UIViewController *controller = view.reactViewController;
-    if (controller) {
-      return (UIEdgeInsets){controller.topLayoutGuide.length, 0, controller.bottomLayoutGuide.length, 0};
-    }
-    view = view.superview;
-  }
-  return UIEdgeInsetsZero;
-}
-#endif // TODO(macOS GH#774)
 
 #pragma mark - View Unmounting
 
@@ -978,12 +959,12 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder : unused)
 
 #pragma mark - Borders
 
-- (RCTUIColor *)backgroundColor // TODO(OSS Candidate ISS#2710739)
+- (RCTUIColor *)backgroundColor // TODO(OSS Candidate ISS#2710739) RCTUIColor
 {
   return _backgroundColor;
 }
 
-- (void)setBackgroundColor:(RCTUIColor *)backgroundColor // TODO(OSS Candidate ISS#2710739)
+- (void)setBackgroundColor:(RCTUIColor *)backgroundColor // TODO(OSS Candidate ISS#2710739) RCTUIColor
 {
   if ([_backgroundColor isEqual:backgroundColor]) {
     return;
@@ -1091,28 +1072,28 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
   const BOOL isRTL = _reactLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft;
 
   if ([[RCTI18nUtil sharedInstance] doLeftAndRightSwapInRTL]) {
-    const CGColorRef borderStartColor = _borderStartColor ?: _borderLeftColor;
-    const CGColorRef borderEndColor = _borderEndColor ?: _borderRightColor;
+    RCTUIColor *borderStartColor = _borderStartColor ?: _borderLeftColor; // TODO(OSS Candidate ISS#2710739) RCTUIColor
+    RCTUIColor *borderEndColor = _borderEndColor ?: _borderRightColor; // TODO(OSS Candidate ISS#2710739) RCTUIColor
 
-    const CGColorRef directionAwareBorderLeftColor = isRTL ? borderEndColor : borderStartColor;
-    const CGColorRef directionAwareBorderRightColor = isRTL ? borderStartColor : borderEndColor;
+    RCTUIColor *directionAwareBorderLeftColor = isRTL ? borderEndColor : borderStartColor; // TODO(OSS Candidate ISS#2710739) RCTUIColor
+    RCTUIColor *directionAwareBorderRightColor = isRTL ? borderStartColor : borderEndColor; // TODO(OSS Candidate ISS#2710739) RCTUIColor
 
     return (RCTBorderColors){
-        _borderTopColor ?: _borderColor,
-        directionAwareBorderLeftColor ?: _borderColor,
-        _borderBottomColor ?: _borderColor,
-        directionAwareBorderRightColor ?: _borderColor,
+        (_borderTopColor ?: _borderColor).CGColor,
+        (directionAwareBorderLeftColor ?: _borderColor).CGColor,
+        (_borderBottomColor ?: _borderColor).CGColor,
+        (directionAwareBorderRightColor ?: _borderColor).CGColor,
     };
   }
 
-  const CGColorRef directionAwareBorderLeftColor = isRTL ? _borderEndColor : _borderStartColor;
-  const CGColorRef directionAwareBorderRightColor = isRTL ? _borderStartColor : _borderEndColor;
+  RCTUIColor *directionAwareBorderLeftColor = isRTL ? _borderEndColor : _borderStartColor; // TODO(OSS Candidate ISS#2710739) RCTUIColor
+  RCTUIColor *directionAwareBorderRightColor = isRTL ? _borderStartColor : _borderEndColor; // TODO(OSS Candidate ISS#2710739) RCTUIColor
 
   return (RCTBorderColors){
-      _borderTopColor ?: _borderColor,
-      directionAwareBorderLeftColor ?: _borderLeftColor ?: _borderColor,
-      _borderBottomColor ?: _borderColor,
-      directionAwareBorderRightColor ?: _borderRightColor ?: _borderColor,
+    (_borderTopColor ?: _borderColor).CGColor,
+    (directionAwareBorderLeftColor ?: _borderLeftColor ?: _borderColor).CGColor,
+    (_borderBottomColor ?: _borderColor).CGColor,
+    (directionAwareBorderRightColor ?: _borderRightColor ?: _borderColor).CGColor,
   };
 }
 
@@ -1169,6 +1150,19 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
   backgroundColor = _backgroundColor.CGColor;
 #endif
 
+#if TARGET_OS_OSX // [TODO(macOS GH#1035)
+  CATransform3D transform = [self transform3D];
+  CGPoint anchorPoint = [layer anchorPoint];
+  if (CGPointEqualToPoint(anchorPoint, CGPointZero) && !CATransform3DEqualToTransform(transform, CATransform3DIdentity)) {
+    // https://developer.apple.com/documentation/quartzcore/calayer/1410817-anchorpoint
+    // This compensates for the fact that layer.anchorPoint is {0, 0} instead of {0.5, 0.5} on macOS for some reason.
+    CATransform3D originAdjust = CATransform3DTranslate(CATransform3DIdentity, self.frame.size.width / 2, self.frame.size.height / 2, 0);
+    transform = CATransform3DConcat(CATransform3DConcat(CATransform3DInvert(originAdjust), transform), originAdjust);
+    // Enable edge antialiasing in perspective transforms
+    [layer setAllowsEdgeAntialiasing:!(transform.m34 == 0.0f)];
+  }
+  [layer setTransform:transform];
+#endif // ]TODO(macOS GH#1035)
   if (useIOSBorderRendering) {
     layer.cornerRadius = cornerRadii.topLeft;
     layer.borderColor = borderColors.left;
@@ -1287,19 +1281,19 @@ static void RCTUpdateShadowPathForView(RCTView *view)
 
 #pragma mark Border Color
 
-#define setBorderColor(side)                                \
-  -(void)setBorder##side##Color : (CGColorRef)color         \
-  {                                                         \
-    if (CGColorEqualToColor(_border##side##Color, color)) { \
-      return;                                               \
-    }                                                       \
-    CGColorRelease(_border##side##Color);                   \
-    _border##side##Color = CGColorRetain(color);            \
-    [self.layer setNeedsDisplay];                           \
+// TODO(OSS Candidate ISS#2710739) RCTUIColor
+#define setBorderColor(side)                       \
+  -(void)setBorder##side##Color : (RCTUIColor *)color \
+  {                                                \
+    if ([_border##side##Color isEqual:color]) {    \
+      return;                                      \
+    }                                              \
+    _border##side##Color = color;                  \
+    [self.layer setNeedsDisplay];                  \
   }
 
 setBorderColor() setBorderColor(Top) setBorderColor(Right) setBorderColor(Bottom) setBorderColor(Left)
-        setBorderColor(Start) setBorderColor(End)
+    setBorderColor(Start) setBorderColor(End)
 
 #pragma mark - Border Width
 
@@ -1313,8 +1307,8 @@ setBorderColor() setBorderColor(Top) setBorderColor(Right) setBorderColor(Bottom
     [self.layer setNeedsDisplay];                \
   }
 
-            setBorderWidth() setBorderWidth(Top) setBorderWidth(Right) setBorderWidth(Bottom) setBorderWidth(Left)
-                setBorderWidth(Start) setBorderWidth(End)
+        setBorderWidth() setBorderWidth(Top) setBorderWidth(Right) setBorderWidth(Bottom) setBorderWidth(Left)
+            setBorderWidth(Start) setBorderWidth(End)
 
 #pragma mark - Border Radius
 
@@ -1328,9 +1322,9 @@ setBorderColor() setBorderColor(Top) setBorderColor(Right) setBorderColor(Bottom
     [self.layer setNeedsDisplay];                  \
   }
 
-                    setBorderRadius() setBorderRadius(TopLeft) setBorderRadius(TopRight) setBorderRadius(TopStart)
-                        setBorderRadius(TopEnd) setBorderRadius(BottomLeft) setBorderRadius(BottomRight)
-                            setBorderRadius(BottomStart) setBorderRadius(BottomEnd)
+                setBorderRadius() setBorderRadius(TopLeft) setBorderRadius(TopRight) setBorderRadius(TopStart)
+                    setBorderRadius(TopEnd) setBorderRadius(BottomLeft) setBorderRadius(BottomRight)
+                        setBorderRadius(BottomStart) setBorderRadius(BottomEnd)
 
 #pragma mark - Border Style
 
@@ -1344,21 +1338,7 @@ setBorderColor() setBorderColor(Top) setBorderColor(Right) setBorderColor(Bottom
     [self.layer setNeedsDisplay];                       \
   }
 
-                                setBorderStyle()
-
-    - (void)dealloc
-{
-#if TARGET_OS_OSX // [TODO(macOS GH#774)
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
-#endif // ]TODO(macOS GH#774)
-  CGColorRelease(_borderColor);
-  CGColorRelease(_borderTopColor);
-  CGColorRelease(_borderRightColor);
-  CGColorRelease(_borderBottomColor);
-  CGColorRelease(_borderLeftColor);
-  CGColorRelease(_borderStartColor);
-  CGColorRelease(_borderEndColor);
-}
+  setBorderStyle()
 
 #pragma mark Focus ring // [TODO(macOS GH#774)
 
@@ -1405,19 +1385,6 @@ setBorderColor() setBorderColor(Top) setBorderColor(Right) setBorderColor(Bottom
 - (BOOL)acceptsFirstResponder
 {
   return ([self focusable] && [NSApp isFullKeyboardAccessEnabled]) || [super acceptsFirstResponder];
-}
-
-- (BOOL)performKeyEquivalent:(NSEvent *)theEvent
-{
-  if (self.onClick != nil &&
-      [self focusable] &&
-      [[self window] firstResponder] == self) {
-    if ([[theEvent characters] isEqualToString:@" "] || [[theEvent characters] isEqualToString:@"\r"]) {
-      self.onClick(nil);
-      return YES;
-    }
-  }
-  return [super performKeyEquivalent:theEvent];
 }
 
 - (void)updateTrackingAreas
@@ -1476,7 +1443,7 @@ setBorderColor() setBorderColor(Top) setBorderColor(Right) setBorderColor(Bottom
     return;
   }
   
-  NSMutableDictionary *body = [[NSMutableDictionary alloc] init];
+  NSMutableDictionary *body = [NSMutableDictionary new];
   
   if (modifierFlags & NSEventModifierFlagShift) {
     body[@"shiftKey"] = @YES;

@@ -52,11 +52,12 @@ class KeyEventExample extends React.Component<{}, State> {
         <View>
           {Platform.OS === 'macos' ? (
             <View
-              acceptsKeyboardFocus={true}
+              focusable={true}
               validKeysDown={['g', 'Tab', 'Esc', 'Enter', 'ArrowLeft']}
               onKeyDown={this.onKeyDownEvent}
               validKeysUp={['c', 'd']}
-              onKeyUp={this.onKeyUpEvent}>
+              onKeyUp={this.onKeyUpEvent}
+            >
               <Button
                 title={'Test button'}
                 onKeyDown={this.onKeyDownEvent}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -74,6 +74,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)init)
   return [_key isEqual:input] && (_flags == flags || flags == 0);
 }
 
+#if DEBUG // TODO(macOS GH#774) description is a debug-only feature
 - (NSString *)description
 {
   return [NSString stringWithFormat:@"<%@:%p input=\"%@\" flags=%lld hasBlock=%@>",
@@ -83,6 +84,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)init)
                                     (long long)_flags,
                                     _block ? @"YES" : @"NO"];
 }
+#endif // TODO(macOS GH#774)
 
 @end
 

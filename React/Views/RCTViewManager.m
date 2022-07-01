@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,6 +7,7 @@
 
 #import "RCTViewManager.h"
 
+#import "RCTAssert.h"
 #import "RCTBorderStyle.h"
 #import "RCTBridge.h"
 #import "RCTConvert+Transform.h"
@@ -28,6 +29,7 @@ RCT_MULTI_ENUM_CONVERTER(
     (@{
       @"none" : @(UIAccessibilityTraitNone),
       @"button" : @(UIAccessibilityTraitButton),
+      @"togglebutton" : @(UIAccessibilityTraitButton),
       @"link" : @(UIAccessibilityTraitLink),
       @"header" : @(UIAccessibilityTraitHeader),
       @"search" : @(UIAccessibilityTraitSearchField),
@@ -49,7 +51,6 @@ RCT_MULTI_ENUM_CONVERTER(
       // a set of RN accessibilityTraits are macOS specific accessiblity roles and map to nothing on iOS:
       @"disclosure" : @(UIAccessibilityTraitNone),
       @"group" : @(UIAccessibilityTraitNone),
-      @"list" : @(UIAccessibilityTraitNone),
       // ]TODO(macOS GH#774)
       @"alert" : @(UIAccessibilityTraitNone),
       @"checkbox" : @(UIAccessibilityTraitNone),
@@ -57,16 +58,18 @@ RCT_MULTI_ENUM_CONVERTER(
       @"menu" : @(UIAccessibilityTraitNone),
       @"menubar" : @(UIAccessibilityTraitNone),
       @"menuitem" : @(UIAccessibilityTraitNone),
-      @"progressbar" : @(UIAccessibilityTraitNone),
+      @"progressbar" : @(UIAccessibilityTraitUpdatesFrequently),
       @"radio" : @(UIAccessibilityTraitNone),
       @"radiogroup" : @(UIAccessibilityTraitNone),
       @"scrollbar" : @(UIAccessibilityTraitNone),
       @"spinbutton" : @(UIAccessibilityTraitNone),
       @"switch" : @(SwitchAccessibilityTrait),
       @"tab" : @(UIAccessibilityTraitNone),
+      @"tabbar" : @(UIAccessibilityTraitTabBar),
       @"tablist" : @(UIAccessibilityTraitNone),
       @"timer" : @(UIAccessibilityTraitNone),
       @"toolbar" : @(UIAccessibilityTraitNone),
+      @"list" : @(UIAccessibilityTraitNone),
     }),
     UIAccessibilityTraitNone,
     unsignedLongLongValue)
@@ -83,6 +86,12 @@ RCT_EXPORT_MODULE()
 - (dispatch_queue_t)methodQueue
 {
   return RCTGetUIManagerQueue();
+}
+
+- (void)setBridge:(RCTBridge *)bridge
+{
+  RCTWarnNotAllowedForNewArchitecture(self, @"RCTViewManager must not be initialized for the new architecture");
+  _bridge = bridge;
 }
 
 - (RCTPlatformView *)view // TODO(macOS GH#774)
@@ -206,15 +215,16 @@ RCT_CUSTOM_VIEW_PROPERTY(shouldRasterizeIOS, BOOL, RCTView)
 
 RCT_CUSTOM_VIEW_PROPERTY(transform, CATransform3D, RCTView)
 {
-#if !TARGET_OS_OSX // TODO(macOS GH#774)
+#if TARGET_OS_OSX // [TODO(macOS GH#460)
+  CATransform3D transform = json ? [RCTConvert CATransform3D:json] : defaultView.layer.transform;
+  [view setTransform3D:transform];
+  [view setNeedsDisplay];
+#else  // ]TODO(macOS GH#460)]
   view.layer.transform = json ? [RCTConvert CATransform3D:json] : defaultView.layer.transform;
-  // Enable edge antialiasing in perspective transforms
-  view.layer.allowsEdgeAntialiasing = !(view.layer.transform.m34 == 0.0f);
-#elif TARGET_OS_OSX // [TODO(macOS GH#774)
-  view.layer.sublayerTransform = json ? [RCTConvert CATransform3D:json] : defaultView.layer.sublayerTransform;
-  // TODO: Improve this by enabling edge antialiasing only for transforms with rotation or skewing
-  view.layer.edgeAntialiasingMask = !CATransform3DIsIdentity(view.layer.sublayerTransform) ? kCALayerLeftEdge | kCALayerRightEdge | kCALayerBottomEdge | kCALayerTopEdge : 0;
-#endif // ]TODO(macOS GH#774)
+  // Enable edge antialiasing in rotation, skew, or perspective transforms
+  view.layer.allowsEdgeAntialiasing =
+      view.layer.transform.m12 != 0.0f || view.layer.transform.m21 != 0.0f || view.layer.transform.m34 != 0.0f;
+#endif // [TODO(macOS GH#460)]
 }
 
 RCT_CUSTOM_VIEW_PROPERTY(accessibilityRole, UIAccessibilityTraits, RCTView)
@@ -223,7 +233,8 @@ RCT_CUSTOM_VIEW_PROPERTY(accessibilityRole, UIAccessibilityTraits, RCTView)
   const UIAccessibilityTraits AccessibilityRolesMask = UIAccessibilityTraitNone | UIAccessibilityTraitButton |
       UIAccessibilityTraitLink | UIAccessibilityTraitSearchField | UIAccessibilityTraitImage |
       UIAccessibilityTraitKeyboardKey | UIAccessibilityTraitStaticText | UIAccessibilityTraitAdjustable |
-      UIAccessibilityTraitHeader | UIAccessibilityTraitSummaryElement | SwitchAccessibilityTrait;
+      UIAccessibilityTraitHeader | UIAccessibilityTraitSummaryElement | UIAccessibilityTraitTabBar |
+      UIAccessibilityTraitUpdatesFrequently | SwitchAccessibilityTrait;
   view.reactAccessibilityElement.accessibilityTraits =
       view.reactAccessibilityElement.accessibilityTraits & ~AccessibilityRolesMask;
   UIAccessibilityTraits newTraits = json ? [RCTConvert UIAccessibilityTraits:json] : defaultView.accessibilityTraits;
@@ -246,7 +257,7 @@ RCT_CUSTOM_VIEW_PROPERTY(accessibilityRole, UIAccessibilityTraits, RCTView)
 RCT_CUSTOM_VIEW_PROPERTY(accessibilityState, NSDictionary, RCTView)
 {
   NSDictionary<NSString *, id> *state = json ? [RCTConvert NSDictionary:json] : nil;
-  NSMutableDictionary<NSString *, id> *newState = [[NSMutableDictionary<NSString *, id> alloc] init];
+  NSMutableDictionary<NSString *, id> *newState = [NSMutableDictionary<NSString *, id> new];
 
   if (!state) {
     return;
@@ -336,7 +347,7 @@ RCT_CUSTOM_VIEW_PROPERTY(borderRadius, CGFloat, RCTView)
 RCT_CUSTOM_VIEW_PROPERTY(borderColor, CGColor, RCTView)
 {
   if ([view respondsToSelector:@selector(setBorderColor:)]) {
-    view.borderColor = json ? [RCTConvert CGColor:json] : defaultView.borderColor;
+    view.borderColor = json ? [RCTConvert UIColor:json] : defaultView.borderColor;
   } else {
     view.layer.borderColor = json ? [RCTConvert CGColor:json] : defaultView.layer.borderColor;
   }
@@ -376,12 +387,6 @@ RCT_CUSTOM_VIEW_PROPERTY(acceptsFirstMouse, BOOL, RCTView)
     view.acceptsFirstMouse = json ? [RCTConvert BOOL:json] : defaultView.acceptsFirstMouse;
   }
 }
-RCT_CUSTOM_VIEW_PROPERTY(acceptsKeyboardFocus, BOOL, RCTView)
-{
-  if ([view respondsToSelector:@selector(setFocusable:)]) {
-    view.focusable = json ? [RCTConvert BOOL:json] : defaultView.focusable;
-  }
-}
 RCT_CUSTOM_VIEW_PROPERTY(focusable, BOOL, RCTView)
 {
   if ([view respondsToSelector:@selector(setFocusable:)]) {
@@ -409,6 +414,13 @@ RCT_CUSTOM_VIEW_PROPERTY(draggedTypes, NSArray<NSPasteboardType>*, RCTView)
 
 #endif // ]TODO(macOS GH#774)
 
+RCT_CUSTOM_VIEW_PROPERTY(collapsable, BOOL, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
 #define RCT_VIEW_BORDER_PROPERTY(SIDE)                                                               \
   RCT_CUSTOM_VIEW_PROPERTY(border##SIDE##Width, float, RCTView)                                      \
   {                                                                                                  \
@@ -419,7 +431,7 @@ RCT_CUSTOM_VIEW_PROPERTY(draggedTypes, NSArray<NSPasteboardType>*, RCTView)
   RCT_CUSTOM_VIEW_PROPERTY(border##SIDE##Color, UIColor, RCTView)                                    \
   {                                                                                                  \
     if ([view respondsToSelector:@selector(setBorder##SIDE##Color:)]) {                              \
-      view.border##SIDE##Color = json ? [RCTConvert CGColor:json] : defaultView.border##SIDE##Color; \
+      view.border##SIDE##Color = json ? [RCTConvert UIColor:json] : defaultView.border##SIDE##Color; \
     }                                                                                                \
   }
 
